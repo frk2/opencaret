@@ -25,7 +25,13 @@ The accelerated growth of knowledge that we have seen in the software world is d
 
 I want to accelerate this learning by opening up the full implementation (and datasets) to anyone who is interested, including access to the car itself to folks who want to test code live. I hope that this accelerates tinkering and hacking in this space. The cost of a bug could be a life when a self driving car is involved - so instead of wasting human effort on reimplementing the same algorithms again and again - I hope this allows us to come up with novel solutions and advance the state of the art in a meaningful way.
 
+## All talk and no code!
+Yes I do understand that - I'm currently busy on getting the car basics ready so no code to show, but soon!
 
 ## How can I help
 
-https://trello.com/opencaret
+By helping wire the car or pushing code! To see what I'm currently working on checkout the team's [Trello Board](https://trello.com/opencaret)
+
+You can also join our [Discord Team](https://discord.gg/yYwb7xK)
+
+Feel free to email me as well!
