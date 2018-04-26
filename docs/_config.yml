@@ -1,5 +1,0 @@
-theme: jekyll-theme-cayman
-include: ['_pages']
-markdown: kramdown
-kramdown:
-  input: GFM
