@@ -1,8 +1,8 @@
 ---
 layout: post
 title: The radar is alive!
-image: /img/hello_world.jpeg
 published: true
+date: '2018-04-23'
 ---
 
 Since im waiting on the macrofab order for Polysync OSCC to come through I thought I'll try and get the radar to actually spit out real information. I thought this would be as easy as connecting the radar and deciphering its CAN messages. 
