@@ -2,6 +2,7 @@
 layout: page
 title: Opencaret
 subtitle: An open-source/open-data L3 highway autopilot system for modern cars. Initially being perfected on the Kia Soul EV
+permalink: index.html
 ---
 
 ## The story

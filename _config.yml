@@ -24,11 +24,10 @@ description: An open-source/open-data L3 highway autopilot system for modern car
 # List of links in the navigation bar
 navbar-links:
   About Me: "aboutme"
-  Blog: "blog"
   Resources:
     - Toyota Radar Hack: "https://github.com/frk2/toyoyta_radar_control_can"
   Github: "https://github.com/frk2/opencaret/"
-  
+
 
 # Image to show in the navigation bar - image must be a square (width = height)
 # Remove this parameter if you don't want an image in the navbar
