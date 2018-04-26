@@ -1,7 +1,8 @@
 ---
 layout: post
-published: false
+published: true
 title: Look what I found on craigslist!
+date: '2018-04-25'
 ---
 
 Its surprising how cheap these things are! Really fun to drive and as simple as they get. Im actually enjoying driving this car around. Has a reasonable amount of punch to it. I would say that in urban driving its definitely better than my 2017 Civic touring.
