@@ -40,8 +40,11 @@ The accelerated growth of knowledge that we have seen in the software world is d
 
 I want to accelerate this learning by opening up the full implementation (and datasets) to anyone who is interested, including access to the car itself to folks who want to test code live. I hope that this accelerates tinkering and hacking in this space. The cost of a bug could be a life when a self driving car is involved - so instead of wasting human effort on reimplementing the same algorithms again and again - I hope this allows us to come up with novel solutions and advance the state of the art in a meaningful way.
 
+## How will this ever be sustainable?
+I don't think selling to the consumer directly makes sense in this application. The idea would be to dual-license this under a commercial license and sell in partnership with a Tier 1 supplier (the likes of Bosch, Denso, etc). These guys know how to make amazing hardware and how to interface with cars in a bullet-proof way. We just need to make the software awesome. Sounds far out and hard but thats why these are called hard problems to solve :)
+
 ## All talk and no code!
-Yes I do understand that - I'm currently busy on getting the car basics ready so no code to show, but soon! In the meantime [follow me on twitter](https://twitter.com/faraz_r_khan) to get updates on whats going on. I'll be putting up a blog here on GHP soon as well so you can track progress.
+Yes I do understand that - I'm currently busy on getting the car basics ready so no code to show, but soon! In the meantime [follow me on twitter](https://twitter.com/faraz_r_khan) to get updates on whats going on. I'm also going to keep the [Blog](/opencaret/blog) as up-to-date as possible.
 
 ## How can I help
 
