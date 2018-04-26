@@ -11,6 +11,6 @@ Ofcourse it was way harder than that! Turns out the radar has to be turned ON by
 
 ![The radar on my desk connected to two CAN bus USB adaptors]({{site.baseurl}}/img/IMG_20180425_180230.jpg)
 
-If you want to do this yourself- take a look at https://github.com/frk2/toyoyta_radar_control_can
+If you want to do this yourself- take a look at my [Toyota Radar Can control project](https://github.com/frk2/toyoyta_radar_control_can)
 
 Now to actually mount this thing on the car
