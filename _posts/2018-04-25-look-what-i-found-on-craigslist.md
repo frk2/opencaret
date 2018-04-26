@@ -1,7 +1,7 @@
 ---
 layout: post
 published: true
-title: Look what I found on craigslist!
+title: Found a nice kia soul EV on craigslist!
 date: '2018-04-25'
 ---
 
