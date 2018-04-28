@@ -41,7 +41,7 @@ The accelerated growth of knowledge that we have seen in the software world is d
 I want to accelerate this learning by opening up the full implementation (and datasets) to anyone who is interested, including access to the car itself to folks who want to test code live. I hope that this accelerates tinkering and hacking in this space. The cost of a bug could be a life when a self driving car is involved - so instead of wasting human effort on reimplementing the same algorithms again and again - I hope this allows us to come up with novel solutions and advance the state of the art in a meaningful way.
 
 ## How will this ever be sustainable?
-The primary focus for the first 9-12 months isn't to make money, but to deliver on a realiable autopilot system that has a active community around it.
+The primary focus for the first 9-12 months isn't to make money, but to deliver on a realiable autopilot system that has a active community around it. Im personally financially secure enough to make sure this becomes a reality.
 
 I don't think selling to the consumer directly makes sense in this application. Very few will ever let you hack their car and no-one would be okay with even the slightest hint of their warranty getting voided on a new car. The idea would be to dual-license this under a commercial license and sell in partnership with a Tier 1 supplier (the likes of Bosch, Denso, etc) and sell it as a fully OEM/NHTSA blessed modification either done directly at the dealership or at a third-party. These guys know how to make amazing hardware and how to interface with cars in a bullet-proof way. We just need to make the software awesome. Sounds far out and hard but thats why these are called hard problems to solve :)
 
