@@ -35,21 +35,36 @@ How a self driving car is put together is kind of a mystery for many and a lot o
 
 In addition I plan to make available any data I use for DNN training purposes as opensource as well, including the DNN model used.
 
-## Why opensource?
+## Why open source?
 The accelerated growth of knowledge that we have seen in the software world is driven by the fact that anyone with a computer can contribute. Even though majority of the work that happens in a self driving car startup is software engineering - I realized its very hard for people to start playing in this field without joining a well funded startup or spending enough money to rig up a car.
 
 I want to accelerate this learning by opening up the full implementation (and datasets) to anyone who is interested, including access to the car itself to folks who want to test code live. I hope that this accelerates tinkering and hacking in this space. The cost of a bug could be a life when a self driving car is involved - so instead of wasting human effort on reimplementing the same algorithms again and again - I hope this allows us to come up with novel solutions and advance the state of the art in a meaningful way.
 
 ## How will this ever be sustainable?
+The primary focus for the first 9-12 months isn't to make money, but to deliver on a realiable autopilot system that has a active community around it.
+
 I don't think selling to the consumer directly makes sense in this application. Very few will ever let you hack their car and no-one would be okay with even the slightest hint of their warranty getting voided on a new car. The idea would be to dual-license this under a commercial license and sell in partnership with a Tier 1 supplier (the likes of Bosch, Denso, etc) and sell it as a fully OEM/NHTSA blessed modification either done directly at the dealership or at a third-party. These guys know how to make amazing hardware and how to interface with cars in a bullet-proof way. We just need to make the software awesome. Sounds far out and hard but thats why these are called hard problems to solve :)
 
 ## All talk and no code!
 Yes I do understand that - I'm currently busy on getting the car basics ready so no code to show, but soon! In the meantime [follow me on twitter](https://twitter.com/faraz_r_khan) to get updates on whats going on. I'm also going to keep the [Blog](/opencaret/blog) as up-to-date as possible.
 
-## How can I help
 
+## How can I help
 By helping wire the car or pushing code! To see what I'm currently working on checkout the team's [Trello Board](https://trello.com/opencaret)
+
+Broadly speaking the main parts to getting this on the road are:
+
+1. Mounting the Radar/Camera/GPS to the car
+2. Installing Polysync's OSCC on the car and making it work perfectly
+3. Camera based vision and lateral control for lane line detection
+4. Radar based ACC for longitudinal control. MPC for path following
+5. Mapping and localization to popular highways using RTK-GPS + orbslam2 + depth camera 
+6. Centralized real-time highway lane closure inference
 
 You can also join our [Discord Team](https://discord.gg/yYwb7xK)
 
 Feel free to email me as well!
+
+## Common sense disclaimer
+Messing with your car's throttle/brake/steering sensors is dangerous business and you must totally understand what you are getting into. Always test in areas which are completely safe.
+
