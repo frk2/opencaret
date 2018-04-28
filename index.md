@@ -61,7 +61,7 @@ Broadly speaking the main parts to getting this on the road are:
 5. Mapping and localization to popular highways using RTK-GPS + orbslam2 + depth camera 
 6. Centralized real-time highway lane closure inference
 
-You can also join our [Discord Team](https://discord.gg/yYwb7xK)
+You can also join our [Slack Team](https://join.slack.com/t/opencaret/shared_invite/enQtMzU1OTQ2NjY0MTgyLTlhY2JmYTlkYTg4ZGIyNDYzMjFhNWMxNjlmZGFiYTI1MTIyZjA0ODNhMzI5ZDUxYTQ3MWFjYWQ0YzQxZGE1ZjA)
 
 Feel free to email me as well!
 
