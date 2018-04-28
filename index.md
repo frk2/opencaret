@@ -6,12 +6,12 @@ permalink: index.html
 ---
 
 ## The story
-As I inched along on highway 880 (SF Bay Area) on my morning commute down to Santa clara one day I realized that while level 4/5 urban self driving cars are the future and will forever change the landscape - what would really fix 98% of my driving woes immediately is simply an amazing highway autopilot system. I can easily drive the last few urban miles if the car would just handle the torture and drudgery of droning at 15mph on the highway.
+As I inched along on highway 880 (SF Bay Area) on my morning commute down to Santa Clara one day I realized that while level 4/5 urban self driving cars are the future and will forever change the landscape - what would really fix 98% of my driving woes immediately is simply an amazing highway autopilot system. I can easily drive the last few urban miles if the car would just handle the torture and drudgery of droning at 15mph on the highway.
 
-I realize this is not a novel idea. However the devil is in the details. The only fully usable highway autopilot system is Tesla's today with comma.ai's openpilot being a close second. OpenCaret is my attempt to build a reliable and accurate fully opensource/opendata highway autopilot system that could be installed on any vehicle. 
+I realize this is not a novel idea. However the devil is in the details. The only fully usable highway autopilot system is Tesla's today with comma.ai's openpilot being a close second. OpenCaret is my attempt to build a reliable and accurate fully open source/open data highway autopilot system that could be installed on any vehicle. 
 
 ## So whats the idea?
-I'm taking the fastest approach to having a working solution which involves getting a Kia Soul EV and putting a drive-by-wire kit on it using [Polysync's OSCC](https://github.com).
+I'm taking the fastest approach to having a working solution which involves getting a Kia Soul EV and putting a drive-by-wire kit on it using [Polysync's OSCC](https://github.com/PolySync/oscc).
 
 Additionally, the plan so far hardware wise is:
 - Use a ZED Stereo Camera mounted in the center for depth analyis and 2K video
