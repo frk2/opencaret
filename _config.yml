@@ -24,7 +24,7 @@ description: An open-source/open-data L3 highway autopilot system for modern car
 # List of links in the navigation bar
 navbar-links:
   About Me: "aboutme"
-  Blog: "blog"
+  Blog: "https://medium.com/opencaret"
   Resources:
     - Toyota Radar Hack: "https://github.com/frk2/toyoyta_radar_control_can"
   Github: "https://github.com/frk2/opencaret/"
