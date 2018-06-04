@@ -1,0 +1,26 @@
+Designators	 Manufacturer Part#  Description
+C5, C9 - C10	Taiyo Yuden EMK212BB7106MG-T 0805 10 uF 16 V ±20% Tolerance X7R Multilayer Ceramic Capacitor
+C1 - C2, C6, C8	Samsung CL05B104KQ5NNNC CL05 Series 0.1 uF 6.3 V ±10 % Tolerance X7R SMT Multilayer Ceramic Capacitor
+C3	AVX TPSA336K006R0600 Cap Tant Solid 33uF 6.3V A CASE 10% (3.2 X 1.6 X 1.6mm) Inward L SMD 3216-18 0.6 Ohm 125C T/R
+C4, C7	Samsung CL05C220JB5NNNC CL05 Series 22 pF 50 V ±5% Tolerance C0G SMT Multilayer Ceramic Capacitor
+CON1 - CON2	https://www.mouser.com/ProductDetail/651-1984617
+CON3 - CON4	https://www.mouser.com/ProductDetail/651-1984633
+D1, D4	MF-LED-0603-RED Red LED 631nm 54mcd 0603		
+D2 - D3	MF-LED-0603-GREEN Green LED 571nm 35mcd 0603
+D5	Würth Elektronik 150060BS75000 Standard LEDs - SMD WL-SMCW SMDMono TpVw Waterclr 0603 Blue		
+JP1-JP6 https://www.mouser.com/ProductDetail/571-9-146282-0
+RE1C002UN	https://www.mouser.com/ProductDetail/755-RE1C002UNTCL (Macrofab didnt have this)	
+R10, R12, R21 - R22	DNP
+R2, R9, R11, R17 - R18, R23	MF-RES-0402-10K Resistor Thick Film 0402 10K Ohm 5% 100mW 50V
+R13	Bourns CR0402-FX-1200GLF Res Thick Film 0402 120 Ohm 1% 0.063W(1/16W)
+R14	Yageo AC0402JR-0747KL Res Thick Film 0402 47K Ohm 5% 0.063W(1/16W)
+R3, R15 - R16, R19 - R20	MF-RES-0402-0 Resistor Thick Film 0402 0 Ohm Jumper
+R1, R4 - R7	MF-RES-0402-1K Resistor Thick Film 0402 1K Ohm 5% 100mW 50V
+R8	Panasonic ERJ-2BQFR30X Res Thick Film 0402 0.3 Ohm 1% 2/3W
+RELAY1	KEMET EE2-5NUH-L Relay; E-Mech; DPDT; Ctrl-V 5DC; 2A; 250VAC; PCB Mount; SMD; EC2/EE2 Series
+U1	Microchip MCP2551-I/SN Microchip MCP2551-I/SN; CAN Transceiver1Mbit/s 1-channel ISO 11898; 8-Pin SOIC
+U2	Microchip MCP2515-I/SO MCP2515 Series 5.5 V 1 Mb/s Stand Alone SPI Interface CAN Controller- SOIC-18
+U4	Texas Instruments TL750M05CKTTR 750-mA, 26-V Low Dropout Voltage Regulators 3-DDPAK/TO-263
+U5	Microchip MCP4922T-E/ST MCP4922 Series 2 Ch 12-Bit Voltage Output Digital-to-Analog Converter-TSSOP-14	
+U6	Texas Instruments SN74CBT3306CD Dual FET Bus Switch with -2 V Undershoot Protection 8-SOIC
+X1	Fox Electronics FOXSDLF/160-20 Oscillator; Crystal; 16MHz; HC-49SD; SMD; +/-30ppm; -20 to +70ppm; 40 Ohms; Fund.; 20pF
