@@ -1,1 +1,7 @@
 _site/
+.idea/
+build/
+install/
+.vscode/
+Gemfile.lock
+
