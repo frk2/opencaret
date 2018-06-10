@@ -4,4 +4,4 @@ build/
 install/
 .vscode/
 Gemfile.lock
-
+*.pyc

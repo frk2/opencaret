@@ -11,8 +11,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'receiver = canoc.receiver:main',
-            'sender = canoc.sender:main'
+            'transceiver = canoc.transceiver:main',
         ],
     },
 )

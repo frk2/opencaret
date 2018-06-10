@@ -1,3 +1,6 @@
+string CANTYPE_RADAR = "RADAR"
+string CANTYPE_CONTROL = "CONTROL"
+
 builtin_interfaces/Time stamp
 string interface
 uint32 id
