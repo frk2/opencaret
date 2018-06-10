@@ -4,4 +4,5 @@ build/
 install/
 .vscode/
 Gemfile.lock
-*.pyc
+__pycache__/
+*.py[cod]
