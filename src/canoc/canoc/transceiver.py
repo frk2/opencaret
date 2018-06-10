@@ -78,7 +78,7 @@ class Transceiver(Node):
         :param can_id: The can interface on which the message came
         :return: None
         """
-        
+
         if can_id in self.can_logical_bidict:
             return
 
