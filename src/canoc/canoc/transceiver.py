@@ -15,7 +15,7 @@ class Transceiver(Node):
     """
 
     # These are the IDs to look for the relevant can buses
-    RADAR_IDS_MATCH = [0x4ff, 0x221]
+    RADAR_IDS_MATCH = [0x220, 0x221, 0x222, 0x223, 0x224, 0x225]
     CONTROL_IDS_MATCH = [0x100, 0x101]
 
     class CanBusListener(can.Listener):
@@ -47,7 +47,8 @@ class Transceiver(Node):
         # find reverse mapping for logical can
 
         if msg.interface in self.can_logical_bidict.inv:
-            can_bus = self.can_buses[self.can_logical_bidict.inv[msg.interface]]
+            bus_id = self.can_logical_bidict.inv[msg.interface]
+            can_bus = self.can_buses[bus_id]
             message = can.Message(arbitration_id=msg.id, data=bytearray(msg.data), extended_id=msg.is_extended)
             can_bus.send(message)
         else:
@@ -55,7 +56,6 @@ class Transceiver(Node):
 
     def on_message_received(self, msg, can_id):
         outmsg = CanMessage()
-        print(msg)
         self.match_canbus_to_logical(msg, can_id)
         if can_id in self.can_logical_bidict:
             outmsg.interface = self.can_logical_bidict[can_id]
