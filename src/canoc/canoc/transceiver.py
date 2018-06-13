@@ -3,6 +3,7 @@ from rclpy.node import Node
 from opencaret_msgs.msg import CanMessage
 import can
 from bidict import bidict
+import netifaces
 
 class Transceiver(Node):
     """
@@ -101,7 +102,7 @@ class Transceiver(Node):
 
 def main():
     rclpy.init()
-    can = Transceiver(['can0'])
+    can = Transceiver([x for x in netifaces.interfaces() if x.startswith('can')])
     rclpy.spin(can)
     can.destroy_node()
     rclpy.shutdown()
