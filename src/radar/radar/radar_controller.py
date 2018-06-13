@@ -1,6 +1,6 @@
 import cantools
 import rclpy
-from opencaret_msgs.msg import CanMessage
+from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
 from rclpy.node import Node
 from util import util
 import os.path
@@ -53,10 +53,13 @@ class RadarController(Node):
         self.db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_pt_generated.dbc'))
 
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
+        self.radar_pub = self.create_publisher(RadarTracks, 'radar_tracks')
         self.power_on_timer = self.create_timer(1.0/100, self.power_on_radar)
         self.radar_is_on = False
         self.frame = 0
         self.last_update_ms = util.ms_since_epoch()
+        self.current_radar_counter = 0
+        self.radar_tracks_msg = RadarTracks()
 
     def power_on_radar(self):
         acc_message = self.db.get_message_by_name('ACC_CONTROL')
@@ -84,12 +87,30 @@ class RadarController(Node):
 
     def on_can_message(self, can_msg):
         if can_msg.interface == CanMessage.CANTYPE_RADAR:
-            if 0x210 <= can_msg.id < 0x21F:
+            if 528 <= can_msg.id <= 559:
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
+                if self.current_radar_counter != msg["COUNTER"]:
+                    # new update, send this track list
+                    self.radar_pub.publish(self.radar_tracks_msg)
+                    self.radar_tracks_msg = RadarTracks()
+                    self.current_radar_counter = msg["COUNTER"]
+                    return
+                if 528 <= can_msg.id <= 543:
+                    track = RadarTrack(track_id=can_msg.id - 528,
+                                       counter=msg["COUNTER"],
+                                       lat_dist=msg["LAT_DIST"],
+                                       lng_dist=msg["LONG_DIST"],
+                                       new_track=bool(msg["NEW_TRACK"]),
+                                       valid=bool(msg["VALID"]))
+                    self.radar_tracks_msg.radar_tracks.append(track)
+                elif 544 <= can_msg.id <= 559:
+                    accel = RadarTrackAccel(track_id=can_msg.id - 544,
+                                            counter=msg["COUNTER"],
+                                            rel_accel=float(msg["REL_ACCEL"]))
+                    self.radar_tracks_msg.radar_accels.append(accel)
+
                 if msg["VALID"] == 1:
                     self.radar_is_on = True
-                    print("Got VALID track at dist: " + str(msg["LONG_DIST"]))
-
 
 def main():
     rclpy.init()

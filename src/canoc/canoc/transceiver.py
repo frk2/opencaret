@@ -43,7 +43,7 @@ class Transceiver(Node):
             self.notifiers[bus] = can.Notifier(canbus, [Transceiver.CanBusListener(bus, self)], timeout=0.1)
 
     def on_send_message(self, msg):
-        print(msg)
+        # print(msg)
         # find reverse mapping for logical can
 
         if msg.interface in self.can_logical_bidict.inv:

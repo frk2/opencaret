@@ -1,4 +1,4 @@
-from launch.exit_handler import primary_exit_handler
+from launch.legacy.exit_handler import primary_exit_handler
 from ros2run.api import get_executable_path
 
 def launch(launch_descriptor, argv):
