@@ -4,6 +4,7 @@ from opencaret_msgs.msg import CanMessage
 from rclpy.node import Node
 from util import util
 import os.path
+import opendbc
 
 import sys
 class ECU:
@@ -44,12 +45,12 @@ class RadarController(Node):
     This radar controller is hardcoded to work only with the Toyota Corolla/Rav4/Camry 2017 Denso unit
     """
 
-    def __init__(self, dbc_path):
+    def __init__(self):
         super().__init__('radar')
         # self.tracks_pub = self.create_publisher(String, 'radar_tracks')
         self.can_pub = self.create_publisher(CanMessage, 'can_send')
-        self.adas_db = cantools.db.load_file(os.path.join(dbc_path, 'toyota_prius_2017_adas.dbc'))
-        self.db = cantools.db.load_file(os.path.join(dbc_path, 'toyota_prius_2017_pt_generated.dbc'))
+        self.adas_db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_adas.dbc'))
+        self.db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_pt_generated.dbc'))
 
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.power_on_timer = self.create_timer(1.0/100, self.power_on_radar)
@@ -92,12 +93,9 @@ class RadarController(Node):
 
 def main():
     rclpy.init()
-    if len(sys.argv) == 2:
-        radar = RadarController(sys.argv[1])
-        rclpy.spin(radar)
-        radar.destroy_node()
-    else:
-        raise Exception("Need a opendbc base directory to proceed")
+    radar = RadarController()
+    rclpy.spin(radar)
+    radar.destroy_node()
     rclpy.shutdown()
 
 
