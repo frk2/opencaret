@@ -1,0 +1,2 @@
+python-can>=2.1.0
+bidict>=0.17.2
