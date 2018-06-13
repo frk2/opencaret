@@ -6,7 +6,6 @@ from util import util
 import os.path
 import opendbc
 
-import sys
 class ECU:
     CAM = 0  # camera
     DSU = 1  # driving support unit
