@@ -8,9 +8,6 @@ setup(
         'opendbc': ['*.dbc']
     },
     install_requires=['setuptools'],
-    # data_files=[
-    #     ('meow', ['opendbc/toyota_prius_2017_adas.dbc'])
-    # ],
     author='Faraz Khan',
     author_email='farazrkhan@gmail.com',
     description='External',
