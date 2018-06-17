@@ -39,7 +39,7 @@ STATIC_MSGS = [
 ]
 
 
-class RadarController(Node):
+class ToyotaRadarController(Node):
     """
     This radar controller is hardcoded to work only with the Toyota Corolla/Rav4/Camry 2017 Denso unit
     """
@@ -99,6 +99,7 @@ class RadarController(Node):
                                        counter=msg["COUNTER"],
                                        lat_dist=msg["LAT_DIST"],
                                        lng_dist=msg["LONG_DIST"],
+                                       rel_speed=msg["REL_SPEED"],
                                        new_track=bool(msg["NEW_TRACK"]),
                                        valid=bool(msg["VALID"]))
                     self.radar_tracks_msg.radar_tracks.append(track)
@@ -113,7 +114,7 @@ class RadarController(Node):
 
 def main():
     rclpy.init()
-    radar = RadarController()
+    radar = ToyotaRadarController()
     rclpy.spin(radar)
     radar.destroy_node()
     rclpy.shutdown()

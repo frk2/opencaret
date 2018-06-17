@@ -2,7 +2,7 @@
 <package format="2">
   <name>radar</name>
   <version>0.0.1</version>
-  <description>Radar controller</description>
+  <description>Toyota Radar controller</description>
   <maintainer email="farazrkhan@gmail.com">Faraz Khan</maintainer>
   <license>MIT</license>
   <exec_depend>rclpy</exec_depend>
