@@ -1,1 +1,8 @@
 _site/
+.idea/
+build/
+install/
+.vscode/
+Gemfile.lock
+__pycache__/
+*.py[cod]

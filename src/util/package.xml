@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>util</name>
+  <version>0.0.1</version>
+  <description>Utilities</description>
+  <maintainer email="farazrkhan@gmail.com">Faraz Khan</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>ament_pep8</test_depend>
+  <test_depend>ament_pyflakes</test_depend>
+  <test_depend>rclpy</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
