@@ -91,8 +91,7 @@ class Transceiver(Node):
                 v[1].add(can_id)
 
                 self.can_logical_match[k] = v
-                if len(v[0]) == 0:
-                    if len(v[1]) == 1:
+                if len(v[0]) == 0 and len(v[1]) == 1:
                         self.can_logical_bidict[can_id] = k
                         del self.can_logical_match[k]
                         self.get_logger().info('Matching can bus {} with {}'.format(can_id, k))
