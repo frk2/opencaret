@@ -86,7 +86,7 @@ class ToyotaRadarController(Node):
 
     def on_can_message(self, can_msg):
         if can_msg.interface == CanMessage.CANTYPE_RADAR:
-            if 528 <= can_msg.id <= 559:
+            if 528 <= can_msg.id <= 559:      #FIXME: Make these ids a enum maybe
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
                 if self.current_radar_counter != msg["COUNTER"]:
                     # new update, send this track list
