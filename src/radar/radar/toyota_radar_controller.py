@@ -53,6 +53,8 @@ class ToyotaRadarController(Node):
 
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.radar_pub = self.create_publisher(RadarTracks, 'radar_tracks')
+        
+        # TODO: This triggers self.power_on_radar() @ 100hz, need to investigate this further!
         self.power_on_timer = self.create_timer(1.0/100, self.power_on_radar)
         self.radar_is_on = False
         self.frame = 0
