@@ -16,6 +16,6 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='tf2_ros', node_executable='static_transform_publisher',
-            arguments=['0', '0', '0', '0', '0', '0', 'world', 'base_link']
+            arguments=['0', '0', '0', '1.5708', '0', '0', 'world', 'base_link']
         )
 ])
