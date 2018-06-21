@@ -17,13 +17,16 @@ class Transceiver(Node):
 
     # These are the IDs to look for the relevant can buses
     RADAR_IDS_MATCH = [0x220, 0x221, 0x222, 0x223, 0x224, 0x225]
-    CONTROL_IDS_MATCH = [0x100, 0x101]
+    CONTROL_IDS_MATCH = [0x73, 0x83, 0x93]
 
     class CanBusListener(can.Listener):
         def __init__(self, can_id, callback):
             self.can_id = can_id
             self.callback = callback
+            self.callback.get_logger().info("notifier started for {}".format(can_id))
+
         def on_message_received(self, msg):
+            print("Incoming message on {}, id: {}".format(self.can_id, msg.arbitration_id))
             self.callback.on_message_received(msg, self.can_id)
 
     def __init__(self, can_buses):
@@ -32,16 +35,25 @@ class Transceiver(Node):
         self.can_logical_bidict = bidict()
         self.notifiers = {}
 
-        self.can_logical_match = {CanMessage.CANTYPE_RADAR: (Transceiver.RADAR_IDS_MATCH, set()),
-                                  CanMessage.CANTYPE_CONTROL: (Transceiver.CONTROL_IDS_MATCH, set())}
+        self.reset_logical_matching()
 
         self.sub = self.create_subscription(CanMessage, 'can_send', self.on_send_message)
         self.pub = self.create_publisher(CanMessage, 'can_recv')
 
         for bus in can_buses:
+            self.get_logger().info("Listening on interfaces: {}".format(bus))
             canbus = can.interface.Bus(bustype='socketcan_native', channel=bus, extended=False)
+
             self.can_buses[bus] = canbus
-            self.notifiers[bus] = can.Notifier(canbus, [Transceiver.CanBusListener(bus, self)], timeout=0.1)
+            self.notifiers[bus] = can.Notifier(canbus, [Transceiver.CanBusListener(bus, self)])
+
+    def reset_logical_matching(self):
+
+        self.can_logical_match = {CanMessage.CANTYPE_RADAR: (Transceiver.RADAR_IDS_MATCH, set()),
+                                  CanMessage.CANTYPE_CONTROL: (Transceiver.CONTROL_IDS_MATCH, set())}
+
+        for k,v in self.can_logical_bidict:
+            del self.can_logical_match[v]
 
     def on_send_message(self, msg):
         # print(msg)
@@ -84,6 +96,7 @@ class Transceiver(Node):
             return
 
         for k,v in self.can_logical_match.items():
+
             if msg.arbitration_id in v[0]:
                 print("While logical matching, Found {} to {}".format(msg.arbitration_id, v[0]))
 
@@ -93,7 +106,10 @@ class Transceiver(Node):
                 self.can_logical_match[k] = v
                 if len(v[0]) == 0 and len(v[1]) == 1:
                         self.can_logical_bidict[can_id] = k
-                        del self.can_logical_match[k]
+                        self.reset_logical_matching()
+                        # remove this can_id from others and reset them so they can be free!
+
+
                         self.get_logger().info('Matching can bus {} with {}'.format(can_id, k))
                         print(self.can_logical_match)
                         return
