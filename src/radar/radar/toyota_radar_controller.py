@@ -92,11 +92,17 @@ class ToyotaRadarController(Node):
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
                 if self.current_radar_counter != msg["COUNTER"]:
                     # new update, send this track list
-                    self.radar_pub.publish(self.radar_tracks_msg)
+                    if len(self.radar_tracks_msg.radar_tracks) > 0:
+                        self.radar_pub.publish(self.radar_tracks_msg)
                     self.radar_tracks_msg = RadarTracks()
                     self.current_radar_counter = msg["COUNTER"]
                     return
+
+                if msg["VALID"] == 0:
+                    return
+
                 if 528 <= can_msg.id <= 543:
+                    print(msg)
                     track = RadarTrack(track_id=can_msg.id - 528,
                                        counter=msg["COUNTER"],
                                        lat_dist=msg["LAT_DIST"],
@@ -109,7 +115,7 @@ class ToyotaRadarController(Node):
                     accel = RadarTrackAccel(track_id=can_msg.id - 544,
                                             counter=msg["COUNTER"],
                                             rel_accel=float(msg["REL_ACCEL"]))
-                    self.radar_tracks_msg.radar_accels.append(accel)
+                    # self.radar_tracks_msg.radar_accels.append(accel)
 
                 if msg["VALID"] == 1:
                     self.radar_is_on = True

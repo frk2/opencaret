@@ -26,7 +26,7 @@ class Transceiver(Node):
             self.callback.get_logger().info("notifier started for {}".format(can_id))
 
         def on_message_received(self, msg):
-            print("Incoming message on {}, id: {}".format(self.can_id, msg.arbitration_id))
+            # print("Incoming message on {}, id: {}".format(self.can_id, msg.arbitration_id))
             self.callback.on_message_received(msg, self.can_id)
 
     def __init__(self, can_buses):
@@ -52,7 +52,7 @@ class Transceiver(Node):
         self.can_logical_match = {CanMessage.CANTYPE_RADAR: (Transceiver.RADAR_IDS_MATCH, set()),
                                   CanMessage.CANTYPE_CONTROL: (Transceiver.CONTROL_IDS_MATCH, set())}
 
-        for k,v in self.can_logical_bidict:
+        for k, v in self.can_logical_bidict.items():
             del self.can_logical_match[v]
 
     def on_send_message(self, msg):
