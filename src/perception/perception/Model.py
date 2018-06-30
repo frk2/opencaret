@@ -136,8 +136,10 @@ class CDilated(nn.Module):
 class DownSamplerB(nn.Module):
     def __init__(self, nIn, nOut):
         super().__init__()
-        n = int(nOut/5)
+        n = max(1, int(nOut/5))
         n1 = nOut - 4*n
+        print("DownSamplerB n: {}, n1: {}".format(n,n1))
+
         self.c1 = C(nIn, n, 3, 2)
         self.d1 = CDilated(n, n1, 3, 1, 1)
         self.d2 = CDilated(n, n, 3, 1, 2)
@@ -182,6 +184,8 @@ class DilatedParllelResidualBlockB(nn.Module):
         super().__init__()
         n = int(nOut/5)
         n1 = nOut - 4*n
+
+        print("DilatedParllelResidualBlockB n: {}, n1: {}".format(n,n1))
         self.c1 = C(nIn, n, 1, 1)
         self.d1 = CDilated(n, n1, 3, 1, 1) # dilation rate of 2^0
         self.d2 = CDilated(n, n, 3, 1, 2) # dilation rate of 2^1
@@ -326,24 +330,27 @@ class ESPNet(nn.Module):
         super().__init__()
         self.encoder = ESPNet_Encoder(classes, p, q)
         if encoderFile != None:
+            print('Loading Encoder loaded using {}!'.format(encoderFile))
             self.encoder.load_state_dict(torch.load(encoderFile))
-            print('Encoder loaded!')
         # load the encoder modules
         self.modules = []
         for i, m in enumerate(self.encoder.children()):
             self.modules.append(m)
 
+        classes1 = classes
+        classes = 20
         # light-weight decoder
         self.level3_C = C(128 + 3, classes, 1, 1)
-        self.br = nn.BatchNorm2d(classes, eps=1e-03)
+        self.br = nn.BatchNorm2d(classes1, eps=1e-03)
         self.conv = CBR(19 + classes, classes, 3, 1)
 
-        self.up_l3 = nn.Sequential(nn.ConvTranspose2d(classes, classes, 2, stride=2, padding=0, output_padding=0, bias=False))
-        self.combine_l2_l3 = nn.Sequential(BR(2*classes), DilatedParllelResidualBlockB(2*classes , classes, add=False))
+        self.up_l3 = nn.Sequential(nn.ConvTranspose2d(classes1, classes, 2, stride=2, padding=0, output_padding=0, bias=False))
+        # self.combine_l2_l3 = nn.Sequential(BR(2*classes), DilatedParllelResidualBlockB(2*classes , classes, add=False))
+        self.combine_l2_l3 = nn.Sequential(BR(2*classes), CBR(2*classes , classes, 3, 1))
 
         self.up_l2 = nn.Sequential(nn.ConvTranspose2d(classes, classes, 2, stride=2, padding=0, output_padding=0, bias=False), BR(classes))
 
-        self.classifier = nn.ConvTranspose2d(classes, classes, 2, stride=2, padding=0, output_padding=0, bias=False)
+        self.classifier = nn.ConvTranspose2d(classes, classes1, 2, stride=2, padding=0, output_padding=0, bias=False)
 
     def forward(self, input):
         '''
