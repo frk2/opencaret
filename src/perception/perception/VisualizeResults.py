@@ -140,7 +140,7 @@ def main(args):
         modelA = Net.ESPNet(classes, p, q)  # Net.Mobile_SegNetDilatedIA_C_stage1(20)
         model_weight_file = args.weightsDir + os.sep + 'decoder' + os.sep + 'espnet_p_' + str(p) + '_q_' + str(q) + '.pth'
         if not os.path.isfile(model_weight_file):
-            print('Pre-trained model file does not exist. Please check ../pretrained/decoder folder')
+            print('Pre-trained model file {} does not exist. Please check ../pretrained/decoder folder'.format(model_weight_file))
             exit(-1)
         modelA.load_state_dict(torch.load(model_weight_file))
     else:
