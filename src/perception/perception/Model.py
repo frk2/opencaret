@@ -138,7 +138,6 @@ class DownSamplerB(nn.Module):
         super().__init__()
         n = max(1, int(nOut/5))
         n1 = nOut - 4*n
-        print("DownSamplerB n: {}, n1: {}".format(n,n1))
 
         self.c1 = C(nIn, n, 3, 2)
         self.d1 = CDilated(n, n1, 3, 1, 1)
@@ -185,7 +184,6 @@ class DilatedParllelResidualBlockB(nn.Module):
         n = int(nOut/5)
         n1 = nOut - 4*n
 
-        print("DilatedParllelResidualBlockB n: {}, n1: {}".format(n,n1))
         self.c1 = C(nIn, n, 1, 1)
         self.d1 = CDilated(n, n1, 3, 1, 1) # dilation rate of 2^0
         self.d2 = CDilated(n, n, 3, 1, 2) # dilation rate of 2^1
