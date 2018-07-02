@@ -38,8 +38,8 @@ class Prediction:
 
     def infer(self, np_image, overlay=False):
             # global mean and std values
-            mean = [72.3923111, 82.90893555, 73.15840149]
-            std = [45.3192215, 46.15289307, 44.91483307]
+            mean = [73.933304, 74.61563, 71.06163]
+            std = [51.179474, 50.492702, 50.31186]
 
             orig_image_np = None
             if overlay:
