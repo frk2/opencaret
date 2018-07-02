@@ -1,6 +1,6 @@
 [submodule "src/opendbc/opendbc"]
-	path = src/opendbc/opendbc
+	path = ros2_ws/src/opendbc/opendbc
 	url = git@github.com:frk2/opendbc.git
 [submodule "src/oscc/oscc"]
-	path = src/oscc/oscc
+	path = ros2_ws/src/oscc/oscc
 	url = git@github.com:frk2/oscc.git

@@ -19,6 +19,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(opencaret_msgs
+  "msg/Time.msg"
   "msg/CanMessage.msg"
   "msg/RadarTrack.msg"
   "msg/RadarTrackAccel.msg"
