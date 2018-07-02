@@ -136,7 +136,7 @@ class CDilated(nn.Module):
 class DownSamplerB(nn.Module):
     def __init__(self, nIn, nOut):
         super().__init__()
-        n = max(1, int(nOut/5))
+        n = int(nOut/5)
         n1 = nOut - 4*n
 
         self.c1 = C(nIn, n, 3, 2)
@@ -335,6 +335,7 @@ class ESPNet(nn.Module):
         for i, m in enumerate(self.encoder.children()):
             self.modules.append(m)
 
+        print("Starting up decoder with classes: "+str(classes))
         classes1 = classes
         classes = 20
         # light-weight decoder
@@ -343,8 +344,8 @@ class ESPNet(nn.Module):
         self.conv = CBR(19 + classes, classes, 3, 1)
 
         self.up_l3 = nn.Sequential(nn.ConvTranspose2d(classes1, classes, 2, stride=2, padding=0, output_padding=0, bias=False))
-        # self.combine_l2_l3 = nn.Sequential(BR(2*classes), DilatedParllelResidualBlockB(2*classes , classes, add=False))
-        self.combine_l2_l3 = nn.Sequential(BR(2*classes), CBR(2*classes , classes, 3, 1))
+        self.combine_l2_l3 = nn.Sequential(BR(2*classes), DilatedParllelResidualBlockB(2*classes , classes, add=False))
+        # self.combine_l2_l3 = nn.Sequential(BR(2*classes), CBR(2*classes , classes, 3, 1))
 
         self.up_l2 = nn.Sequential(nn.ConvTranspose2d(classes, classes, 2, stride=2, padding=0, output_padding=0, bias=False), BR(classes))
 
