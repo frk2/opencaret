@@ -6,3 +6,6 @@ install/
 Gemfile.lock
 __pycache__/
 *.py[cod]
+devel/
+log/
+.catkin_workspace
