@@ -11,7 +11,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'radar_controller = radar.toyota_radar_controller:main'
+            'radar_controller = radar.toyota_radar_controller:main',
+            'viz = radar.radar_viz:main'
         ],
     },
 )

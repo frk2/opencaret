@@ -102,7 +102,6 @@ class ToyotaRadarController(Node):
                     return
 
                 if 528 <= can_msg.id <= 543:
-                    print(msg)
                     track = RadarTrack(track_id=can_msg.id - 528,
                                        counter=msg["COUNTER"],
                                        lat_dist=msg["LAT_DIST"],
