@@ -29,7 +29,7 @@ class RadarViz(Node):
         for track in msg.radar_tracks:
             p = Point()
             p.x = float(track.lng_dist)
-            p.y = float(track.lat_dist)
+            p.y = -float(track.lat_dist)
             p.z = 0.0
             marker.points.append(p)
 
