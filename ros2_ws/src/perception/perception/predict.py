@@ -26,15 +26,15 @@ class Prediction:
                10, 225, 10,
                10, 10, 220]
 
-    def __init__(self, model_weights= model_location + '/../pretrained/encoder/model.pth', classes=3, p=2, q=8):
-        self.model = Net.ESPNet_Encoder(classes, p, q)
+    def __init__(self, model_weights= model_location + '/../pretrained/decoder/model.pth', classes=3, p=2, q=8):
+        self.model = Net.ESPNet(classes, p, q)
         if not os.path.isfile(model_weights):
             print('Pre-trained model file does not exist. Please check {} exists folder'.format(model_weights))
             return
         self.model.load_state_dict(torch.load(model_weights))
         self.model = self.model.cuda()
         self.model.eval()  # set to evaluation mode
-        self.up = torch.nn.Upsample(scale_factor=8, mode='bilinear').cuda()
+        # self.up = torch.nn.Upsample(scale_factor=8, mode='bilinear').cuda()
 
     def infer(self, np_image, overlay=False):
             # global mean and std values
@@ -63,7 +63,7 @@ class Prediction:
             img_variable = Variable(img_tensor, volatile=True)
             img_variable = img_variable.cuda()
             img_out = self.model(img_variable)
-            img_out = self.up(img_out)
+            # img_out = self.up(img_out)
 
             prediction_out = img_out[0].max(0)[1].byte().cpu().data.numpy()
             mask = prediction_out > 0
