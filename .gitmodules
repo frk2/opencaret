@@ -4,6 +4,6 @@
 [submodule "src/oscc/oscc"]
 	path = ros2_ws/src/oscc/oscc
 	url = git@github.com:frk2/oscc.git
-[submodule "ros1_ws/src/zed-ros-wrapper"]
-	path = ros1_ws/src/zed-ros-wrapper
-	url = git@github.com:stereolabs/zed-ros-wrapper.git
+[submodule "ros1_ws/src/ros_libav"]
+	path = ros1_ws/src/ros_libav
+	url = git@github.com:J-Rojas/ros_libav.git
