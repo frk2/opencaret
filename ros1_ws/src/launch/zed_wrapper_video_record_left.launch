@@ -23,23 +23,19 @@
 
   <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" >
     <param name="libav_video_encoder_image_filetype" value="mpg" />
-    <param name="libav_video_encoder_image_topic" value="camera/left/image_raw" />
-    <param name="libav_video_encoder_stream_topic" value="camera/left/image_raw/stream" />
-    <param name="libav_video_encoder_stream_event_topic" value="camera/left/image_raw/stream/event" />
+    <param name="libav_video_encoder_image_topic" value="zed/rgb/image_raw_color" />
+    <param name="libav_video_encoder_stream_topic" value="zed/rgb/image_raw_color/stream" />
+    <param name="libav_video_encoder_stream_event_topic" value="zed/rgb/image_raw_color/stream/event" />
     <param name="libav_video_encoder_delay" value="0.5" />
     <param name="libav_video_encoder_finalize_delay" value="0.75" />
     <param name="libav_video_encoder_video_size" value="960x540" />
-    <param name="libav_video_encoder_crop" value="1920:1080:0:0" />
+    <!--<param name="libav_video_encoder_crop" value="1920:1080:0:0" />-->
     <param name="libav_video_encoder_flip_v" value="1" />
     <param name="libav_video_encoder_flip_h" value="1" />
   </node>
 
-  <node pkg="ros_libav" type="capture.py" name="libav_capture" >
-    <param name="libav_capture_image_topic" value="camera/left/image_raw" />
-    <param name="libav_capture_format" value="video4linux2" />
-    <param name="libav_capture_device" value="/dev/video1" />
-  </node>
+  <include file="$(find zed_wrapper)/launch/display.launch" />
 
-  <node pkg="rosbag" type="record" name="rosbag_record_rgb" args="-o $(arg record_root)/rosbag camera/left/image_raw/stream camera/left/image_raw/stream/event "/>
+  <node pkg="rosbag" type="record" name="rosbag_record_rgb" args="-o $(arg record_root)/rosbag zed/rgb/image_raw_color/stream zed/rgb/image_raw_color/stream/event "/>
 
 </launch>
