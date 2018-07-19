@@ -6,7 +6,7 @@
 @Email:  jrojas@redlinesolutions.co
 @Project: opencaret
 @Last modified by:   jrojas
-@Last modified time: 2018-07-14T09:13:50-07:00
+@Last modified time: 2018-07-19T10:58:35-07:00
 @License: MIT License
 @Copyright: Copyright @ 2018, Jose Rojas
 -->
@@ -23,19 +23,26 @@
 
   <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" >
     <param name="libav_video_encoder_image_filetype" value="mpg" />
-    <param name="libav_video_encoder_image_topic" value="zed/rgb/image_raw_color" />
-    <param name="libav_video_encoder_stream_topic" value="zed/rgb/image_raw_color/stream" />
-    <param name="libav_video_encoder_stream_event_topic" value="zed/rgb/image_raw_color/stream/event" />
+    <param name="libav_video_encoder_image_topic" value="zed/rgb/image_rect_color" />
+    <param name="libav_video_encoder_stream_topic" value="zed/rgb/image_rect_color/stream" />
+    <param name="libav_video_encoder_stream_event_topic" value="zed/rgb/image_rect_color/stream/event" />
     <param name="libav_video_encoder_delay" value="0.5" />
     <param name="libav_video_encoder_finalize_delay" value="0.75" />
-    <param name="libav_video_encoder_video_size" value="960x540" />
-    <!--<param name="libav_video_encoder_crop" value="1920:1080:0:0" />-->
+    <param name="libav_video_encoder_video_size" value="1920x1080" />
     <param name="libav_video_encoder_flip_v" value="1" />
     <param name="libav_video_encoder_flip_h" value="1" />
   </node>
 
-  <include file="$(find zed_wrapper)/launch/display.launch" />
+  <group ns="zed">
+    <node name="zed_wrapper_node" pkg="zed_wrapper" type="zed_wrapper_node" output="screen" required="true">
+      <!-- sets 1080p/30hz on the ZED camera, default is 720p -->
+      <param name="resolution" value="1" />
+    </node>
+  </group>
 
-  <node pkg="rosbag" type="record" name="rosbag_record_rgb" args="-o $(arg record_root)/rosbag zed/rgb/image_raw_color/stream zed/rgb/image_raw_color/stream/event "/>
+  <!-- Launch rivz display -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find zed_wrapper)/rviz/zed.rviz" output="screen" />
+
+  <node pkg="rosbag" type="record" name="rosbag_record_rgb" args="-o $(arg record_root)/rosbag zed/rgb/image_rect_color/stream zed/rgb/image_rect_color/stream/event "/>
 
 </launch>
