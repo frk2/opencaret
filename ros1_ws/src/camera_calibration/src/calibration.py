@@ -2,7 +2,7 @@
 # @Date:   2018-07-19T01:38:02-07:00
 # @Email:  jrojas@redlinesolutions.co
 # @Last modified by:   jrojas
-# @Last modified time: 2018-07-19T10:48:10-07:00
+# @Last modified time: 2018-07-22T01:45:00-07:00
 # @License: MIT License
 # @Copyright: Copyright @ 2018, Jose Rojas
 
@@ -14,7 +14,13 @@ import os, argparse, sys
 
 # taken from: https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
 
-def generate_calibration_features(images, chessboard_size):
+def undistort_images(images, camera_model):
+    ret_images = []
+    for img in images:
+        ret_images.append(cv.undistort(img, camera_model["K"], camera_model["D"]))
+    return ret_images
+
+def generate_calibration_features(images, measurement_data, chessboard_size):
     """
     Determines calibration features from a set of images
 
@@ -28,7 +34,10 @@ def generate_calibration_features(images, chessboard_size):
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     total_count = chessboard_size[0] * chessboard_size[1]
     imgpoints = [] # 2d points in image plane.
-    for img in images:
+    valid_images = []
+    valid_data = []
+    i = 0
+    for img, data in zip(images, measurement_data):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, chessboard_size, None)
@@ -36,8 +45,13 @@ def generate_calibration_features(images, chessboard_size):
         if ret == True:
             corners = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
             imgpoints.append(corners)
+            valid_images.append(img)
+            valid_data.append(data)
+        else:
+            print("No points found in image {}".format(i))
+        i+=1
 
-    return imgpoints
+    return imgpoints, valid_images, valid_data
 
 
 def calculate_control_points(measurement_data, chessboard_size):
@@ -48,22 +62,22 @@ def calculate_control_points(measurement_data, chessboard_size):
         origin_type = data['origin']
         square_size = float(data['square_size'])
 
-        # the distance from the ground
+        # the distance from the ground (Y is negative going upwards)
         height = float(data['height'])
 
-        # the Y distance along the YZ plane (assumes left is negative, right is positive)
+        # the X distance along the YZ plane (assumes left is negative, right is positive)
         lateral = float(data['lateral'])
 
         points = []
 
         if origin_type == 'bottom_middle':
             lateral -= square_size * float(chessboard_size[1] - 1) / 2
-            y = [i * square_size + height for i in range(1, chessboard_size[0] + 1)]
+            y = [ - i * square_size - height for i in range(1, chessboard_size[0] + 1)]
             x = [i * square_size + lateral for i in range(0, chessboard_size[1])]
 
             for i in range(0, chessboard_size[1]):
                 for j in range(0, chessboard_size[0]):
-                    points.append([x[i],y[j],0.0])
+                    points.append([x[i],y[j],data['z']])
         else:
             assert False, "Unknown origin_type {}".format(origin_type)
 
@@ -106,8 +120,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', help="data directory; will contain calibration images and measurement data")
     parser.add_argument('--chessboard_size', default="7x9", help="the size of the chessboard; 'rowsxcols'")
-    parser.add_argument('--camera_model', default="camera_model.json", help="camera parameters file")
+    parser.add_argument('--camera_model', default=None, help="camera parameters file")
     parser.add_argument('--display', action="store_true", default=False, help="display checkboard images")
+    parser.add_argument('--undistort', action="store_true", default=False, help="undistort images before processing")
 
     args = parser.parse_args(sys.argv[1:])
     chessboard_size = args.chessboard_size.split("x")
@@ -131,24 +146,38 @@ if __name__ == '__main__':
         fp.close()
 
     camera_model = None
-    if args.camera_model:
+    if args.camera_model is not None:
         fp = open("{}/{}".format(args.directory, args.camera_model))
         camera_model = json.load(fp)
         camera_model["K"] = np.array(camera_model["K"], dtype=np.float32).reshape(3, 3)
         camera_model["D"] = np.array(camera_model["D"], dtype=np.float32)
         fp.close()
 
-    imgpoints = generate_calibration_features(images, chessboard_size)
+        if args.undistort is True:
+            images = undistort_images(images, camera_model)
+            camera_model["D"] = np.array([0, 0, 0, 0, 0], dtype=np.float32)
 
-    #print(imgpoints)
+        if args.display is True:
+            for img in images:
+                # Draw and display the corners
+                cv.imshow('img', img)
+                cv.waitKey()
+
+    print(camera_model)
+
+    imgpoints, valid_images, valid_measurement_data = generate_calibration_features(images, jsons, chessboard_size)
+
+    for imgarr in imgpoints:
+        assert len(imgarr) > 0
+
+    print(imgpoints)
 
     if args.display:
-        display_calibration_features(images, imgpoints, chessboard_size)
+        display_calibration_features(valid_images, imgpoints, chessboard_size)
 
+    controlpoints = calculate_control_points(valid_measurement_data, chessboard_size)
 
-    controlpoints = calculate_control_points(jsons, chessboard_size)
-
-    #print(controlpoints)
+    print(controlpoints)
 
     calibrate_camera(controlpoints, imgpoints, image_size[0:2],
         intrinsics=camera_model["K"] if camera_model else None,
