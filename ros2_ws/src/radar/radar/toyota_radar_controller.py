@@ -1,3 +1,14 @@
+# @Author: Jose Rojas <jrojas>
+# @Date:   2018-07-23T11:49:01-07:00
+# @Email:  jrojas@redlinesolutions.co
+# @Project: ros-libav-node
+# @Last modified by:   jrojas
+# @Last modified time: 2018-07-23T12:07:11-07:00
+# @License: MIT License
+# @Copyright: Copyright @ 2018, Jose Rojas
+
+
+
 import cantools
 import rclpy
 from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
@@ -53,7 +64,7 @@ class ToyotaRadarController(Node):
 
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.radar_pub = self.create_publisher(RadarTracks, 'radar_tracks')
-        
+
         # TODO: This triggers self.power_on_radar() @ 100hz, need to investigate this further!
         self.power_on_timer = self.create_timer(1.0/30, self.power_on_radar)
         self.radar_is_on = False
@@ -98,7 +109,7 @@ class ToyotaRadarController(Node):
                     self.current_radar_counter = msg["COUNTER"]
                     return
 
-                if msg["VALID"] == 0:
+                if "VALID" in msg and msg["VALID"] == 0:
                     return
 
                 if 528 <= can_msg.id <= 543:
@@ -116,7 +127,7 @@ class ToyotaRadarController(Node):
                                             rel_accel=float(msg["REL_ACCEL"]))
                     # self.radar_tracks_msg.radar_accels.append(accel)
 
-                if msg["VALID"] == 1:
+                if "VALID" in msg and msg["VALID"] == 1:
                     self.radar_is_on = True
 
 def main():
