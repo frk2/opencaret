@@ -16,6 +16,17 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='tf2_ros', node_executable='static_transform_publisher',
-            arguments=['0', '0', '0', '1.5708', '0', '0', 'world', 'base_link']
-        )
-])
+            arguments=['0', '0', '0', '0', '0', '0', 'map', 'base_link']
+        ),
+        launch_ros.actions.Node(
+            package='tf2_ros', node_executable='static_transform_publisher',
+            arguments=['0', '0', '0', '0', '0', '0', 'front_camera_link', 'zed_left_camera']
+        ),
+        launch_ros.actions.Node(
+            package='tf2_ros', node_executable='static_transform_publisher',
+            arguments=['0', '0', '0', '0', '0', '0', 'front_camera_link', 'zed_depth_camera']
+        ),
+
+        launch_ros.actions.Node(
+            package='radar', node_executable='viz', output='screen')
+    ])
