@@ -16,14 +16,19 @@
 
     <param name="libav_video_decoder_root_path" value="$(arg record_root)" />
 
+    <node pkg="ros_libav" type="playback.py" name="libav_video_player" >
+      <param name="libav_video_decoder_stream_topic" value="zed/rgb/image_raw_color/stream" />
+      <param name="libav_video_decoder_stream_event_topic" value="zed/rgb/image_raw_color/stream/event" />
+    </node>
+
     <node pkg="ros_libav" type="playback.py" name="libav_video_player_left" >
-      <param name="libav_video_decoder_stream_topic" value="camera/left/image_raw/stream" />
-      <param name="libav_video_decoder_stream_event_topic" value="camera/left/image_raw/stream/event" />
+      <param name="libav_video_decoder_stream_topic" value="zed/left/image_raw_color/stream" />
+      <param name="libav_video_decoder_stream_event_topic" value="zed/left/image_raw_color/stream/event" />
     </node>
 
     <node pkg="ros_libav" type="playback.py" name="libav_video_player_right" >
-      <param name="libav_video_decoder_stream_topic" value="camera/right/image_raw/stream" />
-      <param name="libav_video_decoder_stream_event_topic" value="camera/right/image_raw/stream/event" />
+      <param name="libav_video_decoder_stream_topic" value="zed/right/image_raw_color/stream" />
+      <param name="libav_video_decoder_stream_event_topic" value="zed/right/image_raw_color/stream/event" />
     </node>
 
     <node pkg="rosbag" type="play" name="rosbag_player_rgb" args="-l -d 2 $(arg bagfile)"/>

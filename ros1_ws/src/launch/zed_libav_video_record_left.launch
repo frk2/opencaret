@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<!--
+@Author: Jose Rojas
+@Date:   2018-07-10T06:34:11-07:00
+@Email:  jrojas@redlinesolutions.co
+@Project: opencaret
+@Last modified by:   jrojas
+@Last modified time: 2018-07-14T09:13:50-07:00
+@License: MIT License
+@Copyright: Copyright @ 2018, Jose Rojas
+-->
+<launch>
+
+  <arg name="record_root" />
+
+  <param name="libav_video_encoder_root_path" value="$(arg record_root)" />
+  <param name="libav_video_encoder_codec" value="libx265" />
+  <param name="libav_video_encoder_preset" value="ultrafast" />
+  <param name="libav_video_encoder_level" value="17" />
+  <param name="libav_video_encoder_framerate" value="10" />
+  <param name="libav_capture_video_size" value="3840x1080" />
+
+  <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" >
+    <param name="libav_video_encoder_image_filetype" value="mpg" />
+    <param name="libav_video_encoder_image_topic" value="zed/rgb/image_raw_color" />
+    <param name="libav_video_encoder_stream_topic" value="zed/rgb/image_raw_color/stream" />
+    <param name="libav_video_encoder_stream_event_topic" value="zed/rgb/image_raw_color/stream/event" />
+    <param name="libav_video_encoder_delay" value="0.5" />
+    <param name="libav_video_encoder_finalize_delay" value="0.75" />
+    <param name="libav_video_encoder_video_size" value="960x540" />
+    <param name="libav_video_encoder_crop" value="1920:1080:0:0" />
+    <param name="libav_video_encoder_flip_v" value="1" />
+    <param name="libav_video_encoder_flip_h" value="1" />
+  </node>
+
+  <node pkg="ros_libav" type="capture.py" name="libav_capture" >
+    <param name="libav_capture_image_topic" value="zed/rgb/image_raw_color" />
+    <param name="libav_capture_format" value="video4linux2" />
+    <param name="libav_capture_device" value="/dev/video0" />
+  </node>
+
+  <node pkg="rosbag" type="record" name="rosbag_record_rgb" args="-o $(arg record_root)/rosbag zed/rgb/image_raw_color/stream zed/rgb/image_raw_color/stream/event "/>
+
+</launch>

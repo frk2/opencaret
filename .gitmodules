@@ -7,3 +7,6 @@
 [submodule "ros1_ws/src/ros_libav"]
 	path = ros1_ws/src/ros_libav
 	url = git@github.com:J-Rojas/ros_libav.git
+[submodule "ros1_ws/src/zed-ros-wrapper"]
+	path = ros1_ws/src/zed-ros-wrapper
+	url = https://github.com/stereolabs/zed-ros-wrapper.git

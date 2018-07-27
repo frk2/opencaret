@@ -2,3 +2,4 @@ python-can>=2.1.0
 bidict>=0.17.2
 netifaces>=0.10.7
 cantools==22.0.0
+av==0.4.0
