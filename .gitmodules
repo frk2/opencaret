@@ -9,4 +9,4 @@
 	url = git@github.com:J-Rojas/ros_libav.git
 [submodule "ros1_ws/src/zed-ros-wrapper"]
 	path = ros1_ws/src/zed-ros-wrapper
-	url = https://github.com/stereolabs/zed-ros-wrapper.git
+	url = git@github.com:frk2/zed-ros-wrapper.git
