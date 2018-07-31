@@ -9,6 +9,7 @@ from opencaret_msgs.msg import LeadVehicle, LongitudinalPlan
 INITIAL_CRUISING_SPEED = 35.0
 INITIAL_DISTANCE_TO_LEAD_CAR = 100.0
 
+
 class LongitudinalPlanner(Node):
 
     def __init__(self):
@@ -41,7 +42,7 @@ class LongitudinalPlanner(Node):
 
     def on_cruising_speed(self, msg):
         self.cruising_speed = msg.data
-        
+
     def on_wheel_speed(self, msg):
         self.v_ego = msg.data
 
@@ -66,7 +67,9 @@ class LongitudinalPlanner(Node):
             if t > 0:
                 cost += cvx.sum_squares(a[t] - a[t - 1]) * 10
 
-            #  Setup constraints to
+            #  Setup constraints for a basic kinematic model of the car assuming constant velocity
+            #  of the lead car for the time being
+
             constr = [v[t + 1] == v[t] + a[t] * self.dt,
                       x[t + 1] == x[t] - v[t] * self.dt - a[t] ** self.dt / 2. + self.v_lead * self.dt,
                       x[t + 1] >= self.min_follow_distance,
