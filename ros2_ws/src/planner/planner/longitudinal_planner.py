@@ -15,8 +15,8 @@ class LongitudinalPlanner(Node):
 
     def __init__(self):
         super(LongitudinalPlanner, self).__init__('longitudinal_planner')
-        self.T = 10
-        self.dt = 0.5
+        self.T = 20
+        self.dt = 0.2
         self.min_follow_distance = cvx.Parameter(value=5.0)
         self.max_acceleration = cvx.Parameter(value=5.0)
         self.min_acceleration = cvx.Parameter(value=-5.0)
