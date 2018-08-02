@@ -7,7 +7,9 @@ from std_msgs.msg import ColorRGBA
 
 class RadarViz(rospy_compat.Node):
     def __init__(self):
-        rospy.init_node('radar_viz', log_level=rospy.INFO)
+        if not(rospy_compat.use_ros_1):
+            super().__init__('radar_viz')
+        rospy_compat.init_node(self, 'radar_viz')
         self.radar_sub = rospy_compat.Subscriber('/radar_tracks', RadarTracks, self.on_radar_tracks)
         self.radar_rviz_pub = rospy_compat.Publisher('/radar_viz', Marker, queue_size=1)
 
@@ -15,7 +17,7 @@ class RadarViz(rospy_compat.Node):
         marker = Marker()
         marker.header.frame_id = "middle_radar_link"
         if rospy_compat.use_ros_1:
-            marker.header.stamp = rospy.Time.now()
+            marker.header.stamp = rospy_compat.rospy.Time.now()
         marker.ns = "radar_tracks"
         marker.id = 1
         marker.type = Marker.POINTS

@@ -6,6 +6,7 @@ YMMV will vary as this is not intended for 100% compatibility.
 use_ros_1=False
 try:
     import rclpy
+    from util import util
     from rclpy.node import Node
 except:
     pass
@@ -16,7 +17,7 @@ try:
 except:
     pass
 
-global node
+node = None
 
 if use_ros_1:
     from rospy import Subscriber, Publisher
@@ -24,21 +25,23 @@ else:
     class Subscriber(object):
 
         def __init__(self, topic, type, func, queue_size=0):
-            self.sub = node.create_subscription(type, topic, func, queue_size=queue_size)
+            global node
+            self.sub = node.create_subscription(type, topic, func)
 
     class Publisher(object):
 
-        def __init__(self, topic, type, func, queue_size=0):
-            self.pub = node.create_publisher(type, topic, func, queue_size=queue_size)
+        def __init__(self, topic, type, queue_size=0):
+            global node
+            self.pub = node.create_publisher(type, topic)
 
         def publish(self, msg):
             self.pub.publish(msg)
 
-def init_node(node, name, log_level=rospy.INFO):
+def init_node(node_obj, name, log_level=None):
+    global node
+    node = node_obj
     if use_ros_1:
         rospy.init_node(name, log_level=log_level)
-    else:
-        node.__init__(name)
 
 def launch_node(type):
     global node
@@ -48,6 +51,6 @@ def launch_node(type):
     else:
         rclpy.init()
         node = type()
-        rclpy.spin(radar)
+        rclpy.spin(node)
         node.destroy_node()
         rclpy.shutdown()
