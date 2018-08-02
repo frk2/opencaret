@@ -1,21 +1,21 @@
-import rclpy
+#!/usr/bin/env python
+from util import rospy_compat
 from opencaret_msgs.msg import RadarTracks
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
-from rclpy.node import Node
-from util import util
+from std_msgs.msg import ColorRGBA
 
-
-class RadarViz(Node):
+class RadarViz(rospy_compat.Node):
     def __init__(self):
-        super().__init__('radar_viz')
-        self.radar_sub = self.create_subscription(RadarTracks, '/radar_tracks', self.on_radar_tracks)
-        self.radar_rviz_pub = self.create_publisher(Marker, '/radar_viz')
+        rospy.init_node('radar_viz', log_level=rospy.INFO)
+        self.radar_sub = rospy_compat.Subscriber('/radar_tracks', RadarTracks, self.on_radar_tracks)
+        self.radar_rviz_pub = rospy_compat.Publisher('/radar_viz', Marker, queue_size=1)
 
     def on_radar_tracks(self, msg):
         marker = Marker()
-        # marker.header.stamp = util.usec_since_epoch()
         marker.header.frame_id = "middle_radar_link"
+        if rospy_compat.use_ros_1:
+            marker.header.stamp = rospy.Time.now()
         marker.ns = "radar_tracks"
         marker.id = 1
         marker.type = Marker.POINTS
@@ -31,18 +31,20 @@ class RadarViz(Node):
             p.x = float(track.lng_dist)
             p.y = -float(track.lat_dist)
             p.z = 0.0
+            c = ColorRGBA()
+            c.a = 1.0
+            if track.valid:
+                c.r = 1.0
+            else:
+                c.r = c.g = c.b = 0.5
             marker.points.append(p)
+            marker.colors.append(c)
 
         self.radar_rviz_pub.publish(marker)
 
 
-
 def main():
-    rclpy.init()
-    radar = RadarViz()
-    rclpy.spin(radar)
-    radar.destroy_node()
-    rclpy.shutdown()
+    rospy_compat.launch_node(RadarViz)
 
 if __name__ == '__main__':
     main()
