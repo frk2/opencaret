@@ -9,3 +9,6 @@ def ms_since_epoch():
 
 def mph_to_ms(mph):
     return 0.44704 * mph
+
+def ms_to_mph(ms):
+    return ms / 0.44704

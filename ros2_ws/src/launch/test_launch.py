@@ -16,8 +16,8 @@ def generate_launch_description():
         launch_ros.actions.Node(
           package='controls', node_executable='lateral_control', output='screen'),
 
-#        launch_ros.actions.Node(
-#            package='planner', node_executable='planner', output='screen'),
+       launch_ros.actions.Node(
+           package='planner', node_executable='planner', output='screen'),
 #         launch_ros.actions.Node(
 #             package='robot_state_publisher', node_executable='robot_state_publisher',
 #             arguments=[os.path.join(get_package_share_directory('prius_description'),'urdf','prius.urdf')]

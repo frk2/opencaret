@@ -7,7 +7,7 @@ from sensor_msgs.msg import Imu
 from opencaret_msgs.msg import LeadVehicle, LongitudinalPlan
 import time
 import numpy as np
-INITIAL_CRUISING_SPEED = 65.0
+INITIAL_CRUISING_SPEED = 15.0
 INITIAL_DISTANCE_TO_LEAD_CAR = 100.0
 
 
@@ -16,11 +16,11 @@ class LongitudinalPlanner(Node):
     def __init__(self):
         super(LongitudinalPlanner, self).__init__('longitudinal_planner')
         self.T = 20
-        self.dt = 0.2
+        self.dt = 0.1
         self.min_follow_distance = cvx.Parameter(value=5.0)
-        self.max_acceleration = cvx.Parameter(value=5.0)
-        self.min_acceleration = cvx.Parameter(value=-5.0)
-        self.min_max_jerk = cvx.Parameter(value=3.0)
+        self.max_acceleration = cvx.Parameter(value=3.0)
+        self.min_acceleration = cvx.Parameter(value=-3.0)
+        self.min_max_jerk = cvx.Parameter(value=2.0)
 
         self.cruising_speed = cvx.Parameter(value=util.mph_to_ms(INITIAL_CRUISING_SPEED))
         self.last_v_trajectory = None
@@ -42,6 +42,7 @@ class LongitudinalPlanner(Node):
         self.speed_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
         self.lead_car_sub = self.create_subscription(LeadVehicle, 'lead_vehicle', self.on_lead_vehicle)
         self.imu_sub = self.create_subscription(Imu, 'imu', self.on_imu)
+        self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel', self.on_computed_accel)
 
         self.plan_pub = self.create_publisher(LongitudinalPlan, 'longitudinal_plan')
         self.timer = self.create_timer(1.0 / 20, self.make_plan)
@@ -50,7 +51,10 @@ class LongitudinalPlanner(Node):
         self.cruising_speed.value = msg.data
 
     def on_wheel_speed(self, msg):
-        self.v_ego.value = msg.data
+        self.v_ego.value = util.mph_to_ms(msg.data)
+
+    def on_computed_accel(self, msg):
+        self.a_ego.value = msg.data
 
     def on_lead_vehicle(self, msg):
         self.x_lead.value = msg.distance
@@ -63,8 +67,8 @@ class LongitudinalPlanner(Node):
     def init_mpc_solver(self):
         states = []
         for t in range(self.T):
-            cost = cvx.sum_squares(self.v[t + 1] - self.cruising_speed) + cvx.sum_squares(self.j[t]) * 3 + \
-                   cvx.sum_squares(self.x[t + 1])
+            cost = cvx.sum_squares(self.v[t + 1] - self.cruising_speed) + cvx.sum_squares(self.j[t]) * 5 + \
+                   cvx.sum_squares((self.min_follow_distance + 3) - self.x[t + 1])
             # if t > 0:
             #     cost += cvx.sum_squares(a[t] - a[t - 1]) * 10
 
@@ -101,17 +105,21 @@ class LongitudinalPlanner(Node):
     def make_plan(self):
 
         start = time.time()
-        self.solver.solve()
+        try:
+            self.solver.solve()
+        except Exception as e:
+            print(e)
 
-        print("time taken: {}, Solve time: {}, Setup Time: {}".format(time.time() - start,
-                                                                      self.solver.solver_stats.solve_time,
-                                                                      self.solver.solver_stats.setup_time))
+
+        # print("time taken: {}, Solve time: {}, Setup Time: {}".format(time.time() - start,
+        #                                                               self.solver.solver_stats.solve_time,
+        #                                                               self.solver.solver_stats.setup_time))
         self.last_v_trajectory = self.x.value
         self.last_a_trajectory = self.a.value
         self.last_x_trajectory = self.x.value
         plan = LongitudinalPlan()
         plan.dt = [float(t * self.dt) for t in range(self.T)]
-        print(np.array(self.x.value).reshape(-1).tolist())
+        # print(util.ms_to_mph(np.array(self.v.value).reshape(-1)[5]))
         plan.distance_from_lead = np.array(self.x.value).reshape(-1).tolist()
         plan.accel = np.array(self.a.value).reshape(-1).tolist()
         plan.velocity = np.array(self.v.value).reshape(-1).tolist()

@@ -4,13 +4,14 @@ from rclpy.node import Node
 import sys
 import rclpy
 import time
+from util import util
 
 
 class FakeLeadVehicle(Node):
     def __init__(self, distance, velocity, accel):
         super().__init__('fake_lead_vehicle')
         self.distance = float(distance)
-        self.velocity = float(velocity)
+        self.velocity = util.mph_to_ms(float(velocity))
         self.accel = float(accel)
         self.time_since_last_update = None
         self.last_ego_speed = None
@@ -42,7 +43,7 @@ class FakeLeadVehicle(Node):
         self.lead_vehicle_pub.publish(lead_vehicle_msg)
 
     def on_wheel_speed(self, msg):
-        self.current_ego_speed = float(msg.data)
+        self.current_ego_speed = util.mph_to_ms(float(msg.data))
 
 
 

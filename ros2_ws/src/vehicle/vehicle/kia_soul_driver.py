@@ -1,12 +1,12 @@
 import rclpy
 import cantools
-from rclpy.qos import qos_profile_default, qos_profile_sensor_data
 import oscc
 import os
 from rclpy.node import Node
 from opencaret_msgs.msg import CanMessage
 from std_msgs.msg import Float32, Bool
-
+import time
+from util import util
 
 OSCC_MAGIC_NUMBER = 0xcc05
 
@@ -14,10 +14,15 @@ class KiaSoulDriver(Node):
 
     def __init__(self):
         super(KiaSoulDriver, self).__init__('kiasouldriver')
+
+        self.enabled  = False
+        self.velocities = []
+
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.can_pub = self.create_publisher(CanMessage, 'can_send')
 
         self.speed_pub = self.create_publisher(Float32, 'wheel_speed')
+        self.accel_pub = self.create_publisher(Float32, 'computed_accel')
         self.steering_angle_pub = self.create_publisher(Float32, 'steering_angle')
         self.accel_pedal_pub = self.create_publisher(Float32, 'accel_pedal')
         self.brake_pedal_pub = self.create_publisher(Float32, 'brake_pedal')
@@ -30,6 +35,7 @@ class KiaSoulDriver(Node):
         self.kia_db = cantools.db.load_file(os.path.join(oscc.OSCC_PATH, 'kia_soul_ev.dbc'))
         self.oscc_db = cantools.db.load_file(os.path.join(oscc.OSCC_PATH, 'oscc.dbc'))
 
+
     def on_can_message(self, msg):
         if msg.interface == CanMessage.CANTYPE_CONTROL:
             if msg.id in self.kia_db._frame_id_to_message:
@@ -40,7 +46,9 @@ class KiaSoulDriver(Node):
                     self.steering_angle_pub.publish(Float32(data=float(kia_can_msg["STEERING_ANGLE_angle"])))
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
-                    self.speed_pub.publish(Float32(data=float(kia_can_msg["SPEED_rear_left"])))
+                    speed = float(kia_can_msg["SPEED_rear_left"])
+                    self.speed_pub.publish(Float32(data=speed))
+                    self.calculate_accel(speed)
             elif msg.id in self.oscc_db._frame_id_to_message:
                 # OSCC Message. Currently this only publishes 0 or 1 to indicate
                 # enabled or not. In the future this should be changed to
@@ -55,24 +63,55 @@ class KiaSoulDriver(Node):
                 elif oscc_can_msg.name == "THROTTLE_REPORT":
                     self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
+
+    def calculate_accel(self, speed):
+
+        speed = util.mph_to_ms(speed)
+        if len(self.velocities) > 3:
+            self.velocities = self.velocities[1:] + [(time.time(), speed)]
+        else:
+            self.velocities.append((time.time(), speed))
+
+
+        if len(self.velocities) > 2:
+            end_time, end_vel = self.velocities[-1]
+            start_time, start_vel = self.velocities[0]
+
+            accel = (end_vel - start_vel) / (end_time - start_time)
+            self.accel_pub.publish(Float32(data=accel))
+
+
     def on_throttle_cmd(self, msg):
-        throttle_oscc_cmd = self.oscc_db.get_message_by_name("THROTTLE_COMMAND").encode({
-            'throttle_command_pedal_request': msg.data
+        if not self.enabled:
+            return
+
+
+        throttle_oscc_msg = self.oscc_db.get_message_by_name("THROTTLE_COMMAND")
+        encoded_msg = throttle_oscc_msg.encode({
+            'throttle_command_magic': OSCC_MAGIC_NUMBER,
+            'throttle_command_pedal_request': msg.data,
+            'throttle_command_reserved' : 0
         })
-        self.can_pub.publish(CanMessage(id=throttle_oscc_cmd.frame_id,
+        self.can_pub.publish(CanMessage(id=throttle_oscc_msg.frame_id,
                                         interface=CanMessage.CANTYPE_CONTROL,
-                                        data=throttle_oscc_cmd))
+                                        data=encoded_msg))
 
     def on_brake_cmd(self, msg):
-        brake_oscc_cmd = self.oscc_db.get_message_by_name("BRAKE_COMMAND").encode({
-            'brake_command_pedal_request': msg.data
-        })
-        self.can_pub.publish(CanMessage(id=brake_oscc_cmd.frame_id,
+        if not self.enabled:
+            return
+
+        brake_oscc_msg = self.oscc_db.get_message_by_name("BRAKE_COMMAND")
+        self.can_pub.publish(CanMessage(id=brake_oscc_msg.frame_id,
                                         interface=CanMessage.CANTYPE_CONTROL,
-                                        data=brake_oscc_cmd))
+                                        data=brake_oscc_msg.encode({
+                                            'brake_command_magic': OSCC_MAGIC_NUMBER,
+                                            'brake_command_pedal_request': msg.data,
+                                            'brake_command_reserved': 0
+                                        })))
 
     def on_controls_enable(self, msg):
         self.oscc_enabled(msg.data)
+        self.enabled = msg.data
 
     def oscc_enabled(self, enable):
         msgs = None
