@@ -11,7 +11,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='radar', node_executable='radar_controller', output='log'),
         launch_ros.actions.Node(
-            package='controls', node_executable='lateral_control', output='log'),
+            package='controls', node_executable='longitudinal_control', output='log'),
         launch_ros.actions.Node(
             package='vehicle', node_executable='kia_soul_driver', output='log'),
 

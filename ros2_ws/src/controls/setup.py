@@ -7,11 +7,11 @@ setup(
     install_requires=['setuptools', 'opendbc'],
     author='Faraz Khan',
     author_email='farazrkhan@gmail.com',
-    description='Vehicle controller ',
+    description='Vehicle longitudinal controller ',
     license='MIT',
     entry_points={
         'console_scripts': [
-            'lateral_control = controls.lateral_control:main'
+            'longitudinal_control = controls.longitudinal_control:main'
         ],
     },
 )

@@ -15,7 +15,7 @@ class CONTROL_MODE:
   BRAKE = 2
 
 
-class LateralController(Node):
+class LongitudinalController(Node):
   kP = 0.1
   kI = 0.03
   DEADBAND_ACCEL = 0.05
@@ -91,7 +91,7 @@ class LateralController(Node):
 
 def main():
   rclpy.init()
-  controls = LateralController()
+  controls = LongitudinalController()
   rclpy.spin(controls)
   controls.destroy_node()
   rclpy.shutdown()
