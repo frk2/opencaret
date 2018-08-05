@@ -1,5 +1,5 @@
 <package format="2">
-  <name>prius_description</name>
+  <name>robot_description</name>
   <version>0.0.1</version>
   <description>
   Provides a URDF for a prius
