@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from controls.PID import PID
-from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32,Bool
 from opencaret_msgs.msg import LongitudinalPlan
 from util import util
