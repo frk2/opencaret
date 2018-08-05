@@ -11,22 +11,14 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='radar', node_executable='radar_controller', output='screen'),
         launch_ros.actions.Node(
-            package='robot_state_publisher', node_executable='robot_state_publisher', 
-            arguments=[os.path.join(get_package_share_directory('prius_description'),'urdf','prius.urdf')]
+            package='robot_state_publisher', node_executable='robot_state_publisher',
+            arguments=[os.path.join(current_path,'../../../data/kia_soul/robot_description.urdf')]
         ),
         launch_ros.actions.Node(
             package='tf2_ros', node_executable='static_transform_publisher',
             arguments=['0', '0', '0', '0', '0', '0', 'map', 'base_link']
         ),
-        launch_ros.actions.Node(
-            package='tf2_ros', node_executable='static_transform_publisher',
-            arguments=['0', '0', '0', '0', '0', '0', 'front_camera_link', 'zed_left_camera']
-        ),
-        launch_ros.actions.Node(
-            package='tf2_ros', node_executable='static_transform_publisher',
-            arguments=['0', '0', '0', '0', '0', '0', 'front_camera_link', 'zed_depth_camera']
-        ),
-
+        
         launch_ros.actions.Node(
             package='radar', node_executable='viz', output='screen')
-    ])
+    ]
