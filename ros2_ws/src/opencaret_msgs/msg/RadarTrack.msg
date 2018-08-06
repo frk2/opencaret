@@ -4,4 +4,5 @@ float32 lat_dist
 float32 lng_dist
 bool new_track
 float32 rel_speed
+int8 valid_count
 bool valid
