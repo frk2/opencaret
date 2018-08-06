@@ -45,7 +45,14 @@ class Transceiver(Node):
             canbus = can.interface.Bus(bustype='socketcan_native', channel=bus, extended=False)
 
             self.can_buses[bus] = canbus
-            self.notifiers[bus] = can.Notifier(canbus, [Transceiver.CanBusListener(bus, self)])
+        self.can_timer = self.create_timer(1.0 / 50.0, self.can_loop)
+
+    def can_loop(self):
+        for bus_id, can_bus in self.can_buses.items():
+            msg = can_bus.recv(0.0)
+            while(msg):
+                self.on_message_received(msg, bus_id)
+                msg = can_bus.recv(0.0)
 
     def reset_logical_matching(self):
 
