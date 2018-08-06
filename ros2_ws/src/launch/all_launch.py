@@ -7,9 +7,16 @@ def generate_launch_description():
     """Launch a talker and a listener."""
     return LaunchDescription([
         launch_ros.actions.Node(
-            package='canoc', node_executable='transceiver', output='screen'),
+            package='canoc', node_executable='transceiver', output='log'),
         launch_ros.actions.Node(
-            package='radar', node_executable='radar_controller', output='screen'),
+            package='radar', node_executable='radar_controller', output='log'),
+        launch_ros.actions.Node(
+            package='controls', node_executable='longitudinal_control', output='log'),
+        launch_ros.actions.Node(
+            package='vehicle', node_executable='kia_soul_driver', output='log'),
+
+#        launch_ros.actions.Node(
+#            package='planner', node_executable='planner', output='screen'),
         launch_ros.actions.Node(
             package='robot_state_publisher', node_executable='robot_state_publisher', 
             arguments=[os.path.join(get_package_share_directory('prius_description'),'urdf','prius.urdf')]
@@ -28,5 +35,5 @@ def generate_launch_description():
         ),
 
         launch_ros.actions.Node(
-            package='radar', node_executable='viz', output='screen')
+            package='radar', node_executable='viz', output='log')
     ])

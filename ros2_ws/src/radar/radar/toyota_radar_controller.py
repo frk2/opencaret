@@ -1,14 +1,3 @@
-# @Author: Jose Rojas <jrojas>
-# @Date:   2018-07-23T11:49:01-07:00
-# @Email:  jrojas@redlinesolutions.co
-# @Project: ros-libav-node
-# @Last modified by:   jrojas
-# @Last modified time: 2018-07-23T12:07:11-07:00
-# @License: MIT License
-# @Copyright: Copyright @ 2018, Jose Rojas
-
-
-
 import cantools
 import rclpy
 import time
