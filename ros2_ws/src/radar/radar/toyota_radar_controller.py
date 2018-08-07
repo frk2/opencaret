@@ -96,25 +96,28 @@ class ToyotaRadarController(Node):
                     # self.radar_tracks_msg.radar_tracks = list(map(lambda x : x[0], tracks))
                     # self.radar_tracks_msg.radar_accels = list(map(lambda x : x[1], tracks))
                     # new update, send this track list
-                    if len(self.current_radar_tracks) > 0:
+                    if len(self.current_radar_tracks) > 0 and len(self.current_accel_tracks) > 0:
                         radar_tracks_msg = RadarTracks()
                         radar_tracks_msg.radar_tracks = [track for track in self.current_radar_tracks.values()
-                                                         if track.valid_count >= 0]
-                        radar_tracks_msg.radar_accels = self.current_accel_tracks.values()
+                                                         if track.valid_count > 0]
+
+                        radar_tracks_msg.radar_accels = [track for track in self.current_accel_tracks.values()
+                                                         if track.track_id in self.current_radar_tracks and
+                                                         self.current_radar_tracks[track.track_id].valid_count > 0]
 
                         self.radar_pub.publish(radar_tracks_msg)
 
                     self.current_radar_counter = msg["COUNTER"]
 
                 if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ID_END:
-                    if can_msg.id not in self.current_radar_tracks:
+                    track_id = can_msg.id - self.RADAR_TRACK_ID_START
+                    if track_id not in self.current_radar_tracks:
                         current_track = RadarTrack()
-                        self.current_radar_tracks[can_msg.id] = current_track
-                        print("New track!")
+                        self.current_radar_tracks[track_id] = current_track
                     else:
-                        current_track = self.current_radar_tracks[can_msg.id]
+                        current_track = self.current_radar_tracks[track_id]
 
-                    current_track.id = can_msg.id
+                    current_track.track_id = track_id
                     current_track.counter = msg["COUNTER"]
                     current_track.lat_dist = msg["LAT_DIST"]
                     current_track.lng_dist = msg["LONG_DIST"]
@@ -128,18 +131,19 @@ class ToyotaRadarController(Node):
                                                     max(0, current_track.valid_count + (
                                                         1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1))
                                                     )
-                    print(current_track)
                     if msg["VALID"] == 1:
                         self.radar_is_on = True
 
-                    elif self.RADAR_TRACK_ACCEL_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
-                        if can_msg.id not in self.current_accel_tracks:
-                            accel = RadarTrackAccel(track_id=can_msg.id,
-                                                    counter=msg["COUNTER"],
-                                                    rel_accel=float(msg["REL_ACCEL"]))
-                            self.current_accel_tracks[can_msg.id] = accel
-                        else:
-                            accel = self.current_accel_tracks[can_msg.id]
+                elif self.RADAR_TRACK_ACCEL_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
+                    track_id = can_msg.id - self.RADAR_TRACK_ACCEL_ID_START
+                    if track_id not in self.current_accel_tracks:
+                        accel = RadarTrackAccel()
+                        self.current_accel_tracks[track_id] = accel
+                    else:
+                        accel = self.current_accel_tracks[track_id]
+                    accel.track_id = track_id
+                    accel.counter = msg["COUNTER"]
+                    accel.rel_accel = float(msg["REL_ACCEL"])
 
 
 def main():
