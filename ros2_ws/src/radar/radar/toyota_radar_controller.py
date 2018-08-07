@@ -98,12 +98,10 @@ class ToyotaRadarController(Node):
                     # new update, send this track list
                     if len(self.current_radar_tracks) > 0 and len(self.current_accel_tracks) > 0:
                         radar_tracks_msg = RadarTracks()
-                        radar_tracks_msg.radar_tracks = [track for track in self.current_radar_tracks.values()
-                                                         if track.valid_count > 0]
+                        radar_tracks_msg.radar_tracks = [track for track in self.current_radar_tracks.values()]
 
                         radar_tracks_msg.radar_accels = [track for track in self.current_accel_tracks.values()
-                                                         if track.track_id in self.current_radar_tracks and
-                                                         self.current_radar_tracks[track.track_id].valid_count > 0]
+                                                         if track.track_id in self.current_radar_tracks]
 
                         self.radar_pub.publish(radar_tracks_msg)
 
@@ -123,6 +121,7 @@ class ToyotaRadarController(Node):
                     current_track.lng_dist = msg["LONG_DIST"]
                     current_track.rel_speed = msg["REL_SPEED"]
                     current_track.new_track = bool(msg["NEW_TRACK"])
+                    current_track.valid = bool(msg["VALID"])
 
                     if msg['LONG_DIST'] >= 255 or msg['NEW_TRACK']:
                         current_track.valid_count = 0  # reset counter
