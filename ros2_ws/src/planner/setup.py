@@ -11,7 +11,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'planner = planner.longitudinal_planner:main'
+            'planner = planner.longitudinal_planner:main',
+            'fake_ego = planner.fake_ego:main'
         ],
     },
 )
