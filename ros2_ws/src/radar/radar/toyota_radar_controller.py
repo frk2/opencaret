@@ -82,7 +82,7 @@ class ToyotaRadarController(Node):
             track.valid_count = 0
             track.valid = False
             self.cache_radar_tracks[i] = track
-            
+
         self.reset_tracks()
 
     def reset_tracks(self):
@@ -104,11 +104,6 @@ class ToyotaRadarController(Node):
             if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
                 if self.current_radar_counter != msg["COUNTER"]:
-
-                    # filter only valid tracks - disabled for now since it might be useful to monitor invalid tracks
-                    #tracks = list(filter(lambda x : x[0].valid_count > 0, zip(self.current_radar_tracks, self.current_radar_accels)))
-                    #self.radar_tracks_msg.radar_tracks = list(map(lambda x : x[0], tracks))
-                    #self.radar_tracks_msg.radar_accels = list(map(lambda x : x[1], tracks))
 
                     current_radar_tracks = []
                     current_radar_accels = self.current_radar_accels
