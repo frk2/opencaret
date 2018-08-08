@@ -4,6 +4,7 @@ from opencaret_msgs.msg import RadarTracks
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
+from radar import RADAR_VALID_MAX
 
 class RadarViz(rospy_compat.Node):
     def __init__(self):
@@ -34,10 +35,11 @@ class RadarViz(rospy_compat.Node):
             p.y = -float(track.lat_dist)
             p.z = 0.0
             c = ColorRGBA()
-            c.a = 1.0
-            if track.valid:
+            c.a = track.valid_count / (RADAR_VALID_MAX + 1)  # +1 to help with minimum visibility
+            if track.valid_count > 0:
                 c.r = 1.0
             else:
+                c.a = 1.0
                 c.r = c.g = c.b = 0.5
             marker.points.append(p)
             marker.colors.append(c)
