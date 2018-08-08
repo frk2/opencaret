@@ -4,6 +4,7 @@ import time
 from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
 from rclpy.node import Node
 from util import util
+from radar import RADAR_VALID_MAX
 import os.path
 import opendbc
 
@@ -42,7 +43,6 @@ STATIC_MSGS = [
 ]
 
 class ToyotaRadarController(Node):
-    RADAR_VALID_MAX = 20  # assuming a 20hz update for the radar, retain memory of a target within a radar track for 1 second
     RADAR_TRACK_ID_START = 528
     RADAR_TRACK_ID_RANGE = 16
     RADAR_TRACK_ID_END = RADAR_TRACK_ID_START + RADAR_TRACK_ID_RANGE - 1  # 543
@@ -140,7 +140,7 @@ class ToyotaRadarController(Node):
 
                     curr_valid_count = track.valid_count
                     curr_valid_count += (1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1)
-                    curr_valid_count = min(self.RADAR_VALID_MAX, max(0, curr_valid_count))
+                    curr_valid_count = min(RADAR_VALID_MAX, max(0, curr_valid_count))
 
                     assert not(msg["VALID"] and msg['LONG_DIST']) or curr_valid_count > 0, print(msg, curr_valid_count)
 
