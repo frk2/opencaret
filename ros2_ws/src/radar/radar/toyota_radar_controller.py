@@ -41,9 +41,8 @@ STATIC_MSGS = [
      '\x0c\x00\x00\x00\x00\x00\x00\x00'),
 ]
 
-
 class ToyotaRadarController(Node):
-    RADAR_VALID_MAX = 100
+    RADAR_VALID_MAX = 20  # assuming a 20hz update for the radar, retain memory of a target within a radar track for 1 second
     RADAR_TRACK_ID_START = 528
     RADAR_TRACK_ID_RANGE = 16
     RADAR_TRACK_ID_END = RADAR_TRACK_ID_START + RADAR_TRACK_ID_RANGE - 1  # 543
@@ -72,8 +71,23 @@ class ToyotaRadarController(Node):
         self.frame = 0
         self.last_update_ms = util.ms_since_epoch()
         self.current_radar_counter = 0
-        self.current_radar_tracks = {}
-        self.current_accel_tracks = {}
+        self.current_track_ids = {}
+        self.current_radar_accels = []
+        self.cache_radar_tracks = {}
+
+        # only need to create these once, they are not recreated in the message loop
+        for i in range(0, self.RADAR_TRACK_ID_RANGE):
+            track = RadarTrack()
+            track.track_id = i
+            track.valid_count = 0
+            track.valid = False
+            self.cache_radar_tracks[i] = track
+            
+        self.reset_tracks()
+
+    def reset_tracks(self):
+        self.current_track_ids = {}
+        self.current_radar_accels = []
 
     def power_on_radar(self):
         for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
@@ -92,59 +106,68 @@ class ToyotaRadarController(Node):
                 if self.current_radar_counter != msg["COUNTER"]:
 
                     # filter only valid tracks - disabled for now since it might be useful to monitor invalid tracks
-                    # tracks = list(filter(lambda x : x[0].valid > 0, zip(self.radar_tracks_msg.radar_tracks, self.radar_tracks_msg.radar_accels)))
-                    # self.radar_tracks_msg.radar_tracks = list(map(lambda x : x[0], tracks))
-                    # self.radar_tracks_msg.radar_accels = list(map(lambda x : x[1], tracks))
+                    #tracks = list(filter(lambda x : x[0].valid_count > 0, zip(self.current_radar_tracks, self.current_radar_accels)))
+                    #self.radar_tracks_msg.radar_tracks = list(map(lambda x : x[0], tracks))
+                    #self.radar_tracks_msg.radar_accels = list(map(lambda x : x[1], tracks))
+
+                    current_radar_tracks = []
+                    current_radar_accels = self.current_radar_accels
+
+                    # decrease the valid count for all of the tracks that were missing
+                    for k, track in self.cache_radar_tracks.items():
+                        if k not in self.current_track_ids:
+                            valid_count = track.valid_count = max(0, track.valid_count - 1)
+                            if valid_count > 0:
+                                # add track to list from cache, with a invalid flag, but no accel for simplicity's sake
+                                track.counter = self.current_radar_counter
+                                track.valid = False
+
+                        if k in self.current_track_ids or track.valid_count > 0:
+                            current_radar_tracks.append(track)
+
                     # new update, send this track list
-                    if len(self.current_radar_tracks) > 0 and len(self.current_accel_tracks) > 0:
+                    if len(current_radar_tracks) > 0 or len(current_radar_accels) > 0:
                         radar_tracks_msg = RadarTracks()
-                        radar_tracks_msg.radar_tracks = [track for track in self.current_radar_tracks.values()
-                                                         if track.valid_count > 0]
-
-                        radar_tracks_msg.radar_accels = [track for track in self.current_accel_tracks.values()
-                                                         if track.track_id in self.current_radar_tracks and
-                                                         self.current_radar_tracks[track.track_id].valid_count > 0]
-
+                        radar_tracks_msg.radar_tracks = current_radar_tracks
+                        radar_tracks_msg.radar_accels = current_radar_accels
                         self.radar_pub.publish(radar_tracks_msg)
 
+                    self.reset_tracks()
                     self.current_radar_counter = msg["COUNTER"]
 
                 if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ID_END:
+
                     track_id = can_msg.id - self.RADAR_TRACK_ID_START
-                    if track_id not in self.current_radar_tracks:
-                        current_track = RadarTrack()
-                        self.current_radar_tracks[track_id] = current_track
-                    else:
-                        current_track = self.current_radar_tracks[track_id]
+                    track = self.cache_radar_tracks[track_id]
 
-                    current_track.track_id = track_id
-                    current_track.counter = msg["COUNTER"]
-                    current_track.lat_dist = msg["LAT_DIST"]
-                    current_track.lng_dist = msg["LONG_DIST"]
-                    current_track.rel_speed = msg["REL_SPEED"]
-                    current_track.new_track = bool(msg["NEW_TRACK"])
+                    if msg['LONG_DIST'] >=255 or msg['NEW_TRACK']:
+                        track.valid_count = 0 # reset counter
 
-                    if msg['LONG_DIST'] >= 255 or msg['NEW_TRACK']:
-                        current_track.valid_count = 0  # reset counter
+                    curr_valid_count = track.valid_count
+                    curr_valid_count += (1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1)
+                    curr_valid_count = min(self.RADAR_VALID_MAX, max(0, curr_valid_count))
 
-                    current_track.valid_count = min(self.RADAR_VALID_MAX,
-                                                    max(0, current_track.valid_count + (
-                                                        1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1))
-                                                    )
+                    assert not(msg["VALID"] and msg['LONG_DIST']) or curr_valid_count > 0, print(msg, curr_valid_count)
+
+                    track.counter = msg["COUNTER"]
+                    track.lat_dist = msg["LAT_DIST"]
+                    track.lng_dist = msg["LONG_DIST"]
+                    track.rel_speed = msg["REL_SPEED"]
+                    track.new_track = bool(msg["NEW_TRACK"])
+                    track.valid_count = curr_valid_count
+                    track.valid = bool(msg["VALID"])
+
+                    self.current_track_ids[track_id] = True
+
                     if msg["VALID"] == 1:
                         self.radar_is_on = True
 
                 elif self.RADAR_TRACK_ACCEL_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
                     track_id = can_msg.id - self.RADAR_TRACK_ACCEL_ID_START
-                    if track_id not in self.current_accel_tracks:
-                        accel = RadarTrackAccel()
-                        self.current_accel_tracks[track_id] = accel
-                    else:
-                        accel = self.current_accel_tracks[track_id]
-                    accel.track_id = track_id
-                    accel.counter = msg["COUNTER"]
-                    accel.rel_accel = float(msg["REL_ACCEL"])
-
+                    accel = RadarTrackAccel(track_id=track_id,
+                                            counter=msg["COUNTER"],
+                                            rel_accel=float(msg["REL_ACCEL"]))
+                    self.current_radar_accels.append(accel)
 
 def main():
     rclpy.init()
