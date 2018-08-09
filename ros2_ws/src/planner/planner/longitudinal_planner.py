@@ -112,7 +112,6 @@ class LongitudinalPlanner(Node):
             plan = LongitudinalPlan()
             plan.dt = [float(t * self.dt) for t in range(self.T)]
             # print(util.ms_to_mph(np.array(self.v.value).reshape(-1)[5]))
-            self.get_logger().error("{}".format(self.x.value))
             plan.distance_from_lead = np.array(self.x.value).reshape(-1).tolist()
             plan.accel = np.array(self.a.value).reshape(-1).tolist()
             plan.velocity = np.array(self.v.value).reshape(-1).tolist()
