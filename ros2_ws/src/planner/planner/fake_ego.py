@@ -27,7 +27,7 @@ class FakeEgo(Node):
     def tick(self):
         if self.plan:
             dt = time.time() - self.last_plan_time
-            closest_plan_index = math.floor(dt / TIME_STEP)
+            closest_plan_index = min(len(self.plan.velocity)-1, math.floor(dt / TIME_STEP))
             time_since_closest_plan_index = dt - closest_plan_index * TIME_STEP
             acceleration = self.plan.accel[closest_plan_index]
             velocity = self.plan.velocity[closest_plan_index] + acceleration * time_since_closest_plan_index

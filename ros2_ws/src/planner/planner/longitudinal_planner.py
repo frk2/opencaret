@@ -19,9 +19,9 @@ class LongitudinalPlanner(Node):
         self.T = 20
         self.dt = 0.2
         self.min_follow_distance = cvx.Parameter(value=5.0)
-        self.max_acceleration = cvx.Parameter(value=3.0)
-        self.min_acceleration = cvx.Parameter(value=-3.0)
-        self.min_max_jerk = cvx.Parameter(value=2.0)
+        self.max_acceleration = cvx.Parameter(value=5.0)
+        self.min_acceleration = cvx.Parameter(value=-5.0)
+        self.min_max_jerk = cvx.Parameter(value=4.0)
 
         self.cruising_speed = cvx.Parameter(value=util.mph_to_ms(INITIAL_CRUISING_SPEED))
         self.last_v_trajectory = None
@@ -34,7 +34,7 @@ class LongitudinalPlanner(Node):
         self.a_lead = cvx.Parameter(value=0.0)
 
         self.v = cvx.Variable(self.T + 1)
-        self.a = cvx.Variable(self.T)
+        self.a = cvx.Variable(self.T + 1)
         self.j = cvx.Variable(self.T)
         self.x = cvx.Variable(self.T + 1)
 
@@ -46,7 +46,7 @@ class LongitudinalPlanner(Node):
         self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel', self.on_computed_accel)
 
         self.plan_pub = self.create_publisher(LongitudinalPlan, 'longitudinal_plan')
-        self.timer = self.create_timer(1.0 / 5, self.make_plan)
+        self.timer = self.create_timer(1.0 / 2.0, self.make_plan)
 
     def on_cruising_speed(self, msg):
         self.cruising_speed.value = msg.data
@@ -58,7 +58,7 @@ class LongitudinalPlanner(Node):
         self.a_ego.value = msg.data
 
     def on_lead_vehicle(self, msg):
-        self.x_lead.value = msg.distance
+        self.x_lead.value = min(INITIAL_DISTANCE_TO_LEAD_CAR, msg.distance)
         self.v_lead.value= msg.velocity
         self.a_lead.value = msg.accel
 
@@ -69,7 +69,7 @@ class LongitudinalPlanner(Node):
         states = []
         for t in range(self.T):
             cost = cvx.sum_squares(self.v[t + 1] - self.cruising_speed) + cvx.sum_squares(self.j[t]) * 5 + \
-                   cvx.sum_squares((self.min_follow_distance + 3) - self.x[t + 1])
+                   cvx.sum_squares(self.min_follow_distance - self.x[t + 1]) + cvx.sum_squares(self.a[t + 1] * 3)
             # if t > 0:
             #     cost += cvx.sum_squares(a[t] - a[t - 1]) * 10
 
@@ -78,10 +78,10 @@ class LongitudinalPlanner(Node):
 
             constr = [self.v[t + 1] == self.v[t] + self.a[t] * self.dt,
                       self.x[t + 1] == self.x[t] - self.v[t] * self.dt + self.v_lead * self.dt,
-                      self.x[t + 1] >= self.min_follow_distance,
+                      self.x[t + 1] >= self.min_follow_distance - 2,
                       self.v[t + 1] <= self.cruising_speed + 5,
-                      self.a[t] <= self.max_acceleration,
-                      self.a[t] >= self.min_acceleration,
+                      self.a[t + 1] <= self.max_acceleration,
+                      self.a[t + 1] >= self.min_acceleration,
                       self.v[t + 1] >= 0.0
                       ]
 
