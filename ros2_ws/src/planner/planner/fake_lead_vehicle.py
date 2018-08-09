@@ -47,7 +47,7 @@ class FakeLeadVehicle(Node):
         self.lead_vehilce_distance.publish(Float32(data=self.distance))
 
     def on_wheel_speed(self, msg):
-        self.current_ego_speed = util.mph_to_ms(float(msg.data))
+        self.current_ego_speed = float(msg.data)
 
 
 

@@ -31,7 +31,7 @@ class FakeEgo(Node):
             time_since_closest_plan_index = dt - closest_plan_index * TIME_STEP
             acceleration = self.plan.accel[closest_plan_index]
             velocity = self.plan.velocity[closest_plan_index] + acceleration * time_since_closest_plan_index
-            self.wheel_speed_pub.publish(Float32(data=util.ms_to_mph(velocity)))
+            self.wheel_speed_pub.publish(Float32(data=velocity))
             self.accel_pub.publish(Float32(data=acceleration))
 
 

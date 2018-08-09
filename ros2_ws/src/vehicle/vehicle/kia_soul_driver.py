@@ -16,8 +16,9 @@ class KiaSoulDriver(Node):
         super(KiaSoulDriver, self).__init__('kiasouldriver')
 
         self.enabled  = False
-        self.velocities = []
-
+        self.last_velocity = None
+        self.last_velocity_ts = None
+        self.current_accel = 0
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.can_pub = self.create_publisher(CanMessage, 'can_send')
 
@@ -46,7 +47,7 @@ class KiaSoulDriver(Node):
                     self.steering_angle_pub.publish(Float32(data=float(kia_can_msg["STEERING_ANGLE_angle"])))
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
-                    speed = float(kia_can_msg["SPEED_rear_left"])
+                    speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
                     self.speed_pub.publish(Float32(data=speed))
                     self.calculate_accel(speed)
             elif msg.id in self.oscc_db._frame_id_to_message:
@@ -65,20 +66,18 @@ class KiaSoulDriver(Node):
 
 
     def calculate_accel(self, speed):
+        if not self.last_velocity:
+            self.last_velocity = speed
+            self.last_velocity_ts = time.time()
+            return
 
-        speed = util.mph_to_ms(speed)
-        if len(self.velocities) > 3:
-            self.velocities = self.velocities[1:] + [(time.time(), speed)]
-        else:
-            self.velocities.append((time.time(), speed))
+        curr_time = time.time()
+        accel = (speed - self.last_velocity) / (curr_time - self.last_velocity_ts )
+        self.last_velocity_ts = curr_time
+        self.last_velocity = speed
 
-
-        if len(self.velocities) > 2:
-            end_time, end_vel = self.velocities[-1]
-            start_time, start_vel = self.velocities[0]
-
-            accel = (end_vel - start_vel) / (end_time - start_time)
-            self.accel_pub.publish(Float32(data=accel))
+        self.current_accel = 0.9 * self.current_accel + 0.1 * accel
+        self.accel_pub.publish(Float32(data=self.current_accel))
 
 
     def on_throttle_cmd(self, msg):

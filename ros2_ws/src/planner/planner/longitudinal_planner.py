@@ -52,7 +52,7 @@ class LongitudinalPlanner(Node):
         self.cruising_speed.value = msg.data
 
     def on_wheel_speed(self, msg):
-        self.v_ego.value = util.mph_to_ms(msg.data)
+        self.v_ego.value = msg.data
 
     def on_computed_accel(self, msg):
         self.a_ego.value = msg.data
