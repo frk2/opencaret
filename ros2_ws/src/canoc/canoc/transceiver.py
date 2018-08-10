@@ -42,7 +42,7 @@ class Transceiver(Node, can.Listener):
         self.pub = self.create_publisher(CanMessage, 'can_recv')
 
         self.get_logger().info("Listening on interfaces: {}".format(self.can_interface))
-        self.can_bus = can.interface.Bus(bustype='socketcan_native', channel=self.can_interface, extended=False)
+        self.can_bus = can.interface.Bus(bustype='socketcan', channel=self.can_interface, extended=False)
         # self.notifier = can.Notifier(self.can_bus, [self], timeout=0.1)
         self.create_timer(1.0 / 50.0, self.can_loop)
 
