@@ -43,18 +43,14 @@ class Transceiver(Node, can.Listener):
 
         self.get_logger().info("Listening on interfaces: {}".format(self.can_interface))
         self.can_bus = can.interface.Bus(bustype='socketcan_native', channel=self.can_interface, extended=False)
-        self.notifier = can.Notifier(self.can_bus, [self], timeout=0.1)
+        # self.notifier = can.Notifier(self.can_bus, [self], timeout=0.1)
+        self.create_timer(1.0 / 50.0, self.can_loop)
 
-
-    #     self.create_timer(1.0 / 50.0, self.can_loop(bus, canbus))
-    #
-    # def can_loop(self, bus_id, can_bus):
-    #     def poll_bus():
-    #         msg = can_bus.recv(0.0)
-    #         while(msg):
-    #             self.on_message_received(msg, bus_id)
-    #             msg = can_bus.recv(0.0)
-    #     return poll_bus
+    def can_loop(self):
+        msg = self.can_bus.recv(0.0)
+        while(msg):
+            self.on_message_received(msg)
+            msg = self.can_bus.recv(0.0)
 
     def reset_logical_matching(self):
 
