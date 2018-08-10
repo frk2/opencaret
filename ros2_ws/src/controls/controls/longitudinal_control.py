@@ -9,10 +9,10 @@ import math
 from util import util
 import numpy as np
 
-PLAN_LOOKAHEAD_INDEX = 2
+PLAN_LOOKAHEAD_INDEX = 1
 TIME_STEP = 0.2
 MAX_THROTTLE = 0.4
-MAX_BRAKE = 0.3
+MAX_BRAKE = 0.4
 MAX_PLANNER_DELAY = 1.0  # after 1.0s of no plan, consider the planner dead.
 
 class CONTROL_MODE:
@@ -21,10 +21,10 @@ class CONTROL_MODE:
 
 
 class LongitudinalController(Node):
-    kP = 0.1
-    kI = 0.03
-    DEADBAND_ACCEL = 0.05
-    DEADBAND_BRAKE = -0.05
+    kP = 0.2
+    kI = 0.001
+    DEADBAND_ACCEL = 0.08
+    DEADBAND_BRAKE = -0.08
 
     def __init__(self):
         super().__init__('lateral_controler')
@@ -56,8 +56,8 @@ class LongitudinalController(Node):
 
     def on_plan(self, msg):
         self.plan = msg
-        self.velocity_plan = np.array(self.plan.velocity).astype(np.float32)
-        self.acceleration_plan = np.array(self.plan.accel).astype(np.float32)
+        self.velocity_plan = np.array(self.plan.velocity).astype(np.float32)[PLAN_LOOKAHEAD_INDEX:]
+        self.acceleration_plan = np.array(self.plan.accel).astype(np.float32)[PLAN_LOOKAHEAD_INDEX:]
         self.last_plan_time = time.time()
 
     def on_debug_target_speed(self, msg):
@@ -73,7 +73,7 @@ class LongitudinalController(Node):
 
     def find_current_position_in_plan(self):
         dt = time.time() - self.last_plan_time
-        closest_plan_index = min(len(self.plan.velocity) - 1, math.floor(dt / TIME_STEP))
+        closest_plan_index = min(len(self.velocity_plan) - 1, math.floor(dt / TIME_STEP))
         time_since_closest_plan_index = dt - closest_plan_index * TIME_STEP
         current_plan_deviation = self.velocity_plan[closest_plan_index].item() - self.ego_velocity
         return closest_plan_index,  time_since_closest_plan_index, current_plan_deviation

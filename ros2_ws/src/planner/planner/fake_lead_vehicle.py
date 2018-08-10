@@ -33,7 +33,7 @@ class FakeLeadVehicle(Node):
         self.time_since_last_update = time.time()
         ego_distance_travelled =  (self.last_ego_speed + self.current_ego_speed) / 2.0 * dt
         self.last_ego_speed = self.current_ego_speed
-        lead_distance_travelled = self.velocity * dt + 0.5 * self.accel ** dt
+        lead_distance_travelled = self.velocity * dt + 0.5 * self.accel * dt ** 2
 
         self.distance += lead_distance_travelled - ego_distance_travelled
         self.velocity += self.accel * dt

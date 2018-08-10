@@ -66,17 +66,18 @@ class KiaSoulDriver(Node):
 
 
     def calculate_accel(self, speed):
-        if not self.last_velocity:
+        if self.last_velocity is None:
             self.last_velocity = speed
             self.last_velocity_ts = time.time()
             return
 
         curr_time = time.time()
         accel = (speed - self.last_velocity) / (curr_time - self.last_velocity_ts )
+
         self.last_velocity_ts = curr_time
         self.last_velocity = speed
 
-        self.current_accel = 0.9 * self.current_accel + 0.1 * accel
+        self.current_accel = 0.4 * self.current_accel + 0.6 * accel
         self.accel_pub.publish(Float32(data=self.current_accel))
 
 
@@ -124,10 +125,10 @@ class KiaSoulDriver(Node):
                     'throttle_enable_magic': OSCC_MAGIC_NUMBER,
                     'throttle_enable_reserved': 0
                 }),
-                ("STEERING_ENABLE", {
-                    'steering_enable_magic': OSCC_MAGIC_NUMBER,
-                    'steering_enable_reserved': 0
-                }),
+                # ("STEERING_ENABLE", {
+                #     'steering_enable_magic': OSCC_MAGIC_NUMBER,
+                #     'steering_enable_reserved': 0
+                # }),
             ]
         else:
             msgs = [

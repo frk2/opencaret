@@ -8,7 +8,7 @@ from opencaret_msgs.msg import LeadVehicle, LongitudinalPlan
 import time
 import math
 import numpy as np
-INITIAL_CRUISING_SPEED = 15.0
+INITIAL_CRUISING_SPEED = 10.0
 INITIAL_DISTANCE_TO_LEAD_CAR = 100.0
 
 
@@ -21,7 +21,7 @@ class LongitudinalPlanner(Node):
         self.min_follow_distance = cvx.Parameter(value=5.0)
         self.max_acceleration = cvx.Parameter(value=5.0)
         self.min_acceleration = cvx.Parameter(value=-5.0)
-        self.min_max_jerk = cvx.Parameter(value=4.0)
+        self.min_max_jerk = cvx.Parameter(value=3.0)
 
         self.cruising_speed = cvx.Parameter(value=util.mph_to_ms(INITIAL_CRUISING_SPEED))
         self.last_v_trajectory = None
@@ -79,7 +79,7 @@ class LongitudinalPlanner(Node):
             constr = [self.v[t + 1] == self.v[t] + self.a[t] * self.dt,
                       self.x[t + 1] == self.x[t] - self.v[t] * self.dt + self.v_lead * self.dt,
                       self.x[t + 1] >= self.min_follow_distance - 2,
-                      self.v[t + 1] <= self.cruising_speed + 5,
+                      self.v[t + 1] <= self.cruising_speed + 1,
                       self.a[t + 1] <= self.max_acceleration,
                       self.a[t + 1] >= self.min_acceleration,
                       self.v[t + 1] >= 0.0
@@ -98,7 +98,7 @@ class LongitudinalPlanner(Node):
         # sums problem objectives and concatenates constraints.
         prob = sum(states)
         constraints = [self.v[0] == self.v_ego,
-                       self.a[0] == self.a_ego,
+                       # self.a[0] == self.a_ego,
                        self.x[0] == self.x_lead] + prob.constraints
         return cvx.Problem(prob.objective, constraints=constraints)
 
@@ -116,6 +116,9 @@ class LongitudinalPlanner(Node):
             plan.accel = np.array(self.a.value).reshape(-1).tolist()
             plan.velocity = np.array(self.v.value).reshape(-1).tolist()
             self.plan_pub.publish(plan)
+        else:
+            self.get_logger().error("No solution with v: {}, a: {}, x: {}".format(self.v_ego.value, self.a_ego.value, self.x_lead.value))
+
 
 def main():
     rclpy.init()
