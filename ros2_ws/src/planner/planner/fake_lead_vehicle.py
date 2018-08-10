@@ -17,6 +17,8 @@ class FakeLeadVehicle(Node):
         self.last_ego_speed = None
         self.current_ego_speed = 0
         self.lead_vehicle_pub = self.create_publisher(LeadVehicle, '/lead_vehicle')
+        self.lead_vehicle_velocity = self.create_publisher(Float32, '/lead_vehicle_velocity')
+        self.lead_vehilce_distance = self.create_publisher(Float32, '/lead_vehicle_distance')
         self.velocity_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
         self.tick_timer = self.create_timer(1. /10, self.tick)
 
@@ -31,7 +33,7 @@ class FakeLeadVehicle(Node):
         self.time_since_last_update = time.time()
         ego_distance_travelled =  (self.last_ego_speed + self.current_ego_speed) / 2.0 * dt
         self.last_ego_speed = self.current_ego_speed
-        lead_distance_travelled = self.velocity * dt + 0.5 * self.accel ** dt
+        lead_distance_travelled = self.velocity * dt + 0.5 * self.accel * dt ** 2
 
         self.distance += lead_distance_travelled - ego_distance_travelled
         self.velocity += self.accel * dt
@@ -41,9 +43,11 @@ class FakeLeadVehicle(Node):
         lead_vehicle_msg.accel = self.accel
         print(lead_vehicle_msg)
         self.lead_vehicle_pub.publish(lead_vehicle_msg)
+        self.lead_vehicle_velocity.publish(Float32(data=self.velocity))
+        self.lead_vehilce_distance.publish(Float32(data=self.distance))
 
     def on_wheel_speed(self, msg):
-        self.current_ego_speed = util.mph_to_ms(float(msg.data))
+        self.current_ego_speed = float(msg.data)
 
 
 
