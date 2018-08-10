@@ -10,6 +10,8 @@ from util import util
 
 OSCC_MAGIC_NUMBER = 0xcc05
 
+ACC_FILTER_FACTOR = 0.7
+
 class KiaSoulDriver(Node):
 
     def __init__(self):
@@ -18,12 +20,13 @@ class KiaSoulDriver(Node):
         self.enabled  = False
         self.last_velocity = None
         self.last_velocity_ts = None
-        self.current_accel = 0
+        self.filtered_accel = 0
         self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.can_pub = self.create_publisher(CanMessage, 'can_send')
 
         self.speed_pub = self.create_publisher(Float32, 'wheel_speed')
-        self.accel_pub = self.create_publisher(Float32, 'computed_accel')
+        self.accel_filtered_pub = self.create_publisher(Float32, 'computed_accel_filtered')
+        self.accel_raw_pub = self.create_publisher(Float32, 'computed_accel_raw')
         self.steering_angle_pub = self.create_publisher(Float32, 'steering_angle')
         self.accel_pedal_pub = self.create_publisher(Float32, 'accel_pedal')
         self.brake_pedal_pub = self.create_publisher(Float32, 'brake_pedal')
@@ -77,8 +80,9 @@ class KiaSoulDriver(Node):
         self.last_velocity_ts = curr_time
         self.last_velocity = speed
 
-        self.current_accel = 0.4 * self.current_accel + 0.6 * accel
-        self.accel_pub.publish(Float32(data=self.current_accel))
+        self.filtered_accel = ACC_FILTER_FACTOR * self.filtered_accel + (1 - ACC_FILTER_FACTOR) * accel
+        self.accel_filtered_pub.publish(Float32(data=self.filtered_accel))
+        self.accel_raw_pub.publish(Float32(data=accel))
 
 
     def on_throttle_cmd(self, msg):

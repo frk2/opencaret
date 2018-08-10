@@ -13,6 +13,8 @@ def generate_launch_description():
             package='controls', node_executable='longitudinal_control', output='screen'),
         launch_ros.actions.Node(
             package='planner', node_executable='planner', output='screen'),
+        launch_ros.actions.Node(
+            package='ros1_bridge', node_executable='dynamic_bridge', output='screen'),
 
         # launch_ros.actions.Node(
         #     package='planner', node_executable='fake_ego', output='screen'),
