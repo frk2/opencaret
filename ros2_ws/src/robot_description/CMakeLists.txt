@@ -17,4 +17,8 @@ find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(urdf REQUIRED)
 
+
+install(DIRECTORY meshes
+DESTINATION share/${PROJECT_NAME})
+
 ament_package()

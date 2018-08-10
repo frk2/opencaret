@@ -40,7 +40,7 @@ class LongitudinalController(Node):
         self.throttle_pub = self.create_publisher(Float32, '/throttle_command')
         self.brake_pub = self.create_publisher(Float32, '/brake_command')
         self.last_plan_time = None
-        self.controls_enabled = True
+        self.controls_enabled = False
         self.plan = None
         self.acceleration_plan = None
         self.velocity_plan = None
