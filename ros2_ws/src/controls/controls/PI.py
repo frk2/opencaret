@@ -39,10 +39,10 @@ class PI:
             p = self.Kp * error
             self.i += error * delta_time
 
-            if self.ITerm < -self.windup_guard:
-                self.ITerm = -self.windup_guard
-            elif self.ITerm > self.windup_guard:
-                self.ITerm = self.windup_guard
+            if self.i < -self.windup_guard:
+                self.i = -self.windup_guard
+            elif self.i > self.windup_guard:
+                self.i = self.windup_guard
 
             # Remember last time and last error for next calculation
             self.last_time = self.current_time

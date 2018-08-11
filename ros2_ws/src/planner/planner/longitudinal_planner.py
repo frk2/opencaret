@@ -43,10 +43,10 @@ class LongitudinalPlanner(Node):
         self.speed_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
         self.lead_car_sub = self.create_subscription(LeadVehicle, 'lead_vehicle', self.on_lead_vehicle)
         self.imu_sub = self.create_subscription(Imu, 'imu', self.on_imu)
-        self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel', self.on_computed_accel)
+        self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel_filtered', self.on_computed_accel)
 
         self.plan_pub = self.create_publisher(LongitudinalPlan, 'longitudinal_plan')
-        self.timer = self.create_timer(1.0 / 2.0, self.make_plan)
+        self.timer = self.create_timer(1.0 / 5.0, self.make_plan)
 
     def on_cruising_speed(self, msg):
         self.cruising_speed.value = msg.data
@@ -98,7 +98,7 @@ class LongitudinalPlanner(Node):
         # sums problem objectives and concatenates constraints.
         prob = sum(states)
         constraints = [self.v[0] == self.v_ego,
-                       # self.a[0] == self.a_ego,
+                       self.a[0] == self.a_ego,
                        self.x[0] == self.x_lead] + prob.constraints
         return cvx.Problem(prob.objective, constraints=constraints)
 

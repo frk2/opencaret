@@ -10,7 +10,7 @@ from util import util
 
 OSCC_MAGIC_NUMBER = 0xcc05
 
-ACC_FILTER_FACTOR = 0.7
+ACC_FILTER_FACTOR = 0.9
 
 class KiaSoulDriver(Node):
 

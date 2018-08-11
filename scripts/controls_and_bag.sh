@@ -1,3 +1,5 @@
+
+rostopic pub /controls_enable std_msgs/Bool "data: True" -1 &
 rosbag record \
 /can_recv \
 /can_send \

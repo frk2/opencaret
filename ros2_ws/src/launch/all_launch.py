@@ -38,5 +38,8 @@ def generate_launch_description():
         ),
 
         launch_ros.actions.Node(
-            package='radar', node_executable='viz', output='screen')
+            package='radar', node_executable='viz', output='screen'),
+
+        launch_ros.actions.Node(
+            package='ros1_bridge', node_executable='dynamic_bridge', arguments=['--ridge-all-topics'], output='screen')
     ])

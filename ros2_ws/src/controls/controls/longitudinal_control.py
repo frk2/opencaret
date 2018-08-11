@@ -9,7 +9,7 @@ import math
 from util import util
 import numpy as np
 
-PLAN_LOOKAHEAD_INDEX = 1
+PLAN_LOOKAHEAD_INDEX = 2
 TIME_STEP = 0.2
 MAX_THROTTLE = 0.4
 MAX_BRAKE = 0.4
@@ -22,8 +22,8 @@ class CONTROL_MODE:
 
 class LongitudinalController(Node):
     kP = 0.1
-    kI = 0.001
-    kF = 0.06
+    kI = 0.01
+    kF = 0.1
     DEADBAND_ACCEL = 0.05
     DEADBAND_BRAKE = -0.05
 
@@ -45,7 +45,7 @@ class LongitudinalController(Node):
         self.throttle_pub = self.create_publisher(Float32, '/throttle_command')
         self.brake_pub = self.create_publisher(Float32, '/brake_command')
         self.last_plan_time = None
-        self.controls_enabled = False
+        self.controls_enabled = True
         self.plan = None
         self.acceleration_plan = None
         self.velocity_plan = None
@@ -99,6 +99,7 @@ class LongitudinalController(Node):
             else:
                 velocity = self.velocity_plan[-1].item()  # Try just going at the last velocity and hope for the best!
         else:
+            acceleration = 0.0
             velocity = 0.0
 
         self.plan_deviation_pub.publish(Float32(data=deviation))
@@ -110,20 +111,28 @@ class LongitudinalController(Node):
         self.p_pub.publish(Float32(data=self.pi.P))
         self.ff_pub.publish(Float32(data=self.pi.FF))
         self.i_pub.publish(Float32(data=self.pi.I))
+
+        if self.mode == CONTROL_MODE.BRAKE and self.ego_velocity <= 0.5 and velocity <= 0.5 and acceleration <= 0.1:
+            output = -0.2
+
         if output > self.DEADBAND_ACCEL:
             # print("Accelerating: {}".format(self.pid.output))
-            self.mode = CONTROL_MODE.ACCELERATE
+            if self.mode == CONTROL_MODE.BRAKE:
+                self.pi.clear()
+                self.mode = CONTROL_MODE.ACCELERATE
             self.throttle_pub.publish(Float32(data=output))
             self.brake_pub.publish(Float32(data=0.0))
 
         elif output < self.DEADBAND_BRAKE:
-            self.mode = CONTROL_MODE.BRAKE
+            if self.mode == CONTROL_MODE.ACCELERATE:
+                self.pi.clear()
+                self.mode = CONTROL_MODE.BRAKE
             # print("Braking: {}".format(self.pid.output))
-            self.brake_pub.publish(Float32(data=-output))
+            self.brake_pub.publish(Float32(data=-output + 0.05))
             self.throttle_pub.publish(Float32(data=0.0))
         else:
             if self.mode == CONTROL_MODE.BRAKE:
-                self.brake_pub.publish(Float32(data=-min(0.0, output)))
+                self.brake_pub.publish(Float32(data=-min(0.0, output - 0.05)))
             else:
                 self.throttle_pub.publish(Float32(data=max(0.0, output)))
 

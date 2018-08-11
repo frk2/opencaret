@@ -1,0 +1,2 @@
+*.bag filter=lfs diff=lfs merge=lfs -text
+*.mpg filter=lfs diff=lfs merge=lfs -text
