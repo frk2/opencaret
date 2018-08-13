@@ -9,7 +9,7 @@ def latest_file_in_glob_path(path):
     return latest_file
 
 def main():
-    print(os.path.abspath(latest_file_in_glob_path(sys.argv[1] + "/*")))
+    print(os.path.abspath(latest_file_in_glob_path(sys.argv[1])))
 
 if __name__ == '__main__':
     main()
