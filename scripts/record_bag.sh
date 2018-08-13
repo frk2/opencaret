@@ -1,3 +1,13 @@
+USE_CAMERA=1
+
+if [ "$USE_CAMERA" == "1" ]; then
+  VIDEO_TOPIC1="/zed/left/image_raw_color/stream"
+  VIDEO_TOPIC2="/zed/left/image_raw_color/stream/event"
+else
+  VIDEO_TOPIC1=""
+  VIDEO_TOPIC2=""
+fi
+
 rosbag record \
 /can_recv \
 /can_send \
@@ -25,7 +35,9 @@ rosbag record \
 /steering_angle \
 /steering_torque \
 /throttle_command \
-/wheel_speed
+/wheel_speed \
+$VIDEO_TOPIC1 \
+$VIDEO_TOPIC2
 #/zed/joint_states \
 #/zed/left/image_rect_color \
 #/zed/left/image_rect_color/camera_info \

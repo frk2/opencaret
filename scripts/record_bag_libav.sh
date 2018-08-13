@@ -1,12 +1,5 @@
-USE_ZED_NODE=1
-
-if [ "$USE_ZED_NODE" == "1" ]; then
-  VIDEO_TOPIC1="/zed/rgb/image_rect_color/stream"
-  VIDEO_TOPIC2="/zed/rgb/image_rect_color/stream/event"
-else
-  VIDEO_TOPIC1="/zed/rgb/image_raw_color/stream"
-  VIDEO_TOPIC2="/zed/rgb/image_raw_color/stream/event"
-fi
+VIDEO_TOPIC1="/zed/left/image_raw_color/stream"
+VIDEO_TOPIC2="/zed/left/image_raw_color/stream/event"
 
 rosbag record \
 /can_recv \
