@@ -18,7 +18,7 @@ class LongitudinalPlanner(Node):
         super(LongitudinalPlanner, self).__init__('longitudinal_planner')
         self.T = 20
         self.dt = 0.2
-        self.min_follow_distance = cvx.Parameter(value=5.0)
+        self.min_follow_distance = cvx.Parameter(value=6.0)
         self.max_acceleration = cvx.Parameter(value=5.0)
         self.min_acceleration = cvx.Parameter(value=-5.0)
         self.min_max_jerk = cvx.Parameter(value=3.0)
@@ -46,7 +46,7 @@ class LongitudinalPlanner(Node):
         self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel_filtered', self.on_computed_accel)
 
         self.plan_pub = self.create_publisher(LongitudinalPlan, 'longitudinal_plan')
-        self.timer = self.create_timer(1.0 / 5.0, self.make_plan)
+        self.timer = self.create_timer(1.0 / 4.0, self.make_plan)
 
     def on_cruising_speed(self, msg):
         self.cruising_speed.value = msg.data
@@ -68,8 +68,8 @@ class LongitudinalPlanner(Node):
     def init_mpc_solver(self):
         states = []
         for t in range(self.T):
-            cost = cvx.sum_squares(self.v[t + 1] - self.cruising_speed) + cvx.sum_squares(self.j[t]) * 5 + \
-                   cvx.sum_squares(self.min_follow_distance - self.x[t + 1]) + cvx.sum_squares(self.a[t + 1] * 3)
+            cost = cvx.sum_squares(self.v[t + 1] - self.v_lead - self.a_lead * self.dt) + cvx.sum_squares(self.j[t]) * 5 + \
+                   cvx.sum_squares(self.min_follow_distance - self.x[t + 1]) * 5 + cvx.sum_squares(self.a[t + 1])
             # if t > 0:
             #     cost += cvx.sum_squares(a[t] - a[t - 1]) * 10
 
@@ -78,7 +78,7 @@ class LongitudinalPlanner(Node):
 
             constr = [self.v[t + 1] == self.v[t] + self.a[t] * self.dt,
                       self.x[t + 1] == self.x[t] - self.v[t] * self.dt + self.v_lead * self.dt,
-                      self.x[t + 1] >= self.min_follow_distance - 2,
+                      self.x[t + 1] >= self.min_follow_distance - 3,
                       self.v[t + 1] <= self.cruising_speed + 1,
                       self.a[t + 1] <= self.max_acceleration,
                       self.a[t + 1] >= self.min_acceleration,

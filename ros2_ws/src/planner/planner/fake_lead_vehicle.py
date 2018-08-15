@@ -1,5 +1,5 @@
 from opencaret_msgs.msg import LeadVehicle
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32,Bool
 from rclpy.node import Node
 import sys
 import rclpy
@@ -20,9 +20,18 @@ class FakeLeadVehicle(Node):
         self.lead_vehicle_velocity = self.create_publisher(Float32, '/lead_vehicle_velocity')
         self.lead_vehilce_distance = self.create_publisher(Float32, '/lead_vehicle_distance')
         self.velocity_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
+        self.controls_enabled = self.create_subscription(Bool, 'controls_enable', self.on_controls_enable)
         self.tick_timer = self.create_timer(1. /10, self.tick)
+        self.controls_enabled = False
+
+    def on_controls_enable(self, msg):
+        self.controls_enabled = msg.data
 
     def tick(self):
+
+        if not self.controls_enabled:
+            return
+
         if self.time_since_last_update is None:
             self.time_since_last_update = time.time()
             return
@@ -36,7 +45,12 @@ class FakeLeadVehicle(Node):
         lead_distance_travelled = self.velocity * dt + 0.5 * self.accel * dt ** 2
 
         self.distance += lead_distance_travelled - ego_distance_travelled
+
         self.velocity += self.accel * dt
+        self.velocity = max(0.0, self.velocity)
+        self.distance = max(0.0, self.distance)
+        if self.velocity == 0:
+            self.accel = 0.0
         lead_vehicle_msg = LeadVehicle()
         lead_vehicle_msg.distance = self.distance
         lead_vehicle_msg.velocity = self.velocity

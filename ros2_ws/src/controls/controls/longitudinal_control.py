@@ -9,13 +9,13 @@ import math
 from util import util
 import numpy as np
 
-PLAN_LOOKAHEAD_INDEX = 2
+PLAN_LOOKAHEAD_INDEX = 3
 TIME_STEP = 0.2
 MAX_THROTTLE = 0.4
-MAX_BRAKE = 0.4
+MAX_BRAKE = 0.5
 MAX_PLANNER_DELAY = 1.0  # after 1.0s of no plan, consider the planner dead.
 THROTTLE_FILTER = 0.9
-BRAKE_FILTER = 0.95
+BRAKE_FILTER = 0.9
 
 class CONTROL_MODE:
     ACCELERATE = 1,
@@ -25,7 +25,7 @@ class CONTROL_MODE:
 class LongitudinalController(Node):
     kP = 0.1
     kI = 0.01
-    kF = 0.1
+    kF = 0.13
     DEADBAND_ACCEL = 0.05
     DEADBAND_BRAKE = -0.05
 
@@ -52,7 +52,7 @@ class LongitudinalController(Node):
         self.throttle_pub = self.create_publisher(Float32, '/throttle_command')
         self.brake_pub = self.create_publisher(Float32, '/brake_command')
         self.last_plan_time = None
-        self.controls_enabled = True
+        self.controls_enabled = False
         self.plan = None
         self.acceleration_plan = None
         self.velocity_plan = None
