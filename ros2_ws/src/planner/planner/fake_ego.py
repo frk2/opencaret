@@ -17,7 +17,7 @@ class FakeEgo(Node):
         self.last_plan_time = None
         self.plan_sub = self.create_subscription(LongitudinalPlan, 'longitudinal_plan', self.on_plan)
         self.wheel_speed_pub = self.create_publisher(Float32, 'wheel_speed')
-        self.accel_pub = self.create_publisher(Float32, 'computed_accel')
+        self.accel_pub = self.create_publisher(Float32, 'computed_accel_filtered')
         self.tick_timer = self.create_timer(1. / 30, self.tick)
 
     def on_plan(self, msg):

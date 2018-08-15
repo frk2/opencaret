@@ -14,6 +14,8 @@ TIME_STEP = 0.2
 MAX_THROTTLE = 0.4
 MAX_BRAKE = 0.4
 MAX_PLANNER_DELAY = 1.0  # after 1.0s of no plan, consider the planner dead.
+THROTTLE_FILTER = 0.9
+BRAKE_FILTER = 0.95
 
 class CONTROL_MODE:
     ACCELERATE = 1,
@@ -31,6 +33,11 @@ class LongitudinalController(Node):
         super().__init__('lateral_controler')
         self.ego_accel = 0
         self.ego_velocity = 0
+        self.brake_output = 0.0
+        self.throttle_output = 0.0
+        self.target_throttle = 0.0
+        self.target_brake = 0.0
+
         self.mode = CONTROL_MODE.BRAKE
         self.pi = PI(self.kP, self.kI, self.kF, -MAX_BRAKE, MAX_THROTTLE)
         self.create_subscription(LongitudinalPlan, 'longitudinal_plan', self.on_plan)
@@ -52,6 +59,16 @@ class LongitudinalController(Node):
         self.controls_enabled_sub = self.create_subscription(Bool, 'controls_enable', self.on_controls_enable)
 
         self.pid_timer = self.create_timer(1.0 / 50.0, self.pid_spin)
+
+    def set_target_throttle(self, target, force=False):
+        self.target_throttle = target
+        if force:
+            self.throttle_output = target
+
+    def set_target_brake(self, target, force=False):
+        self.target_brake = target
+        if force:
+            self.brake_output = target
 
     def on_controls_enable(self, msg):
         self.controls_enabled = msg.data
@@ -113,28 +130,34 @@ class LongitudinalController(Node):
         self.i_pub.publish(Float32(data=self.pi.I))
 
         if self.mode == CONTROL_MODE.BRAKE and self.ego_velocity <= 0.5 and velocity <= 0.5 and acceleration <= 0.1:
-            output = -0.2
+            self.get_logger().warn("Brake clamping for stop")
+            output = -0.25
 
         if output > self.DEADBAND_ACCEL:
             # print("Accelerating: {}".format(self.pid.output))
             if self.mode == CONTROL_MODE.BRAKE:
                 self.pi.clear()
                 self.mode = CONTROL_MODE.ACCELERATE
-            self.throttle_pub.publish(Float32(data=output))
-            self.brake_pub.publish(Float32(data=0.0))
+            self.set_target_brake(0.0)
+            self.set_target_throttle(output)
 
         elif output < self.DEADBAND_BRAKE:
             if self.mode == CONTROL_MODE.ACCELERATE:
                 self.pi.clear()
                 self.mode = CONTROL_MODE.BRAKE
             # print("Braking: {}".format(self.pid.output))
-            self.brake_pub.publish(Float32(data=-output + 0.05))
-            self.throttle_pub.publish(Float32(data=0.0))
+            self.set_target_brake(-output + 0.05)
+            self.set_target_throttle(0.0)
         else:
             if self.mode == CONTROL_MODE.BRAKE:
-                self.brake_pub.publish(Float32(data=-min(0.0, output - 0.05)))
+                self.set_target_brake(-min(0.0, output - 0.05))
             else:
-                self.throttle_pub.publish(Float32(data=max(0.0, output)))
+                self.set_target_throttle(max(0.0, output))
+
+        self.throttle_output = THROTTLE_FILTER * self.throttle_output + (1.0 - THROTTLE_FILTER) * self.target_throttle
+        self.brake_output = BRAKE_FILTER * self.brake_output + (1.0 - BRAKE_FILTER) * self.target_brake
+        self.throttle_pub.publish(Float32(data=self.throttle_output))
+        self.brake_pub.publish(Float32(data=self.brake_output))
 
 
 def main():
