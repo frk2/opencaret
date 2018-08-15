@@ -51,8 +51,7 @@ class KiaSoulDriver(Node):
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
                     speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
-                    self.speed_pub.publish(Float32(data=speed))
-                    self.calculate_accel(speed)
+                    self.on_speed(speed, msg.can_timestamp)
             elif msg.id in self.oscc_db._frame_id_to_message:
                 # OSCC Message. Currently this only publishes 0 or 1 to indicate
                 # enabled or not. In the future this should be changed to
@@ -67,23 +66,21 @@ class KiaSoulDriver(Node):
                 elif oscc_can_msg.name == "THROTTLE_REPORT":
                     self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
-
-    def calculate_accel(self, speed):
+    def on_speed(self, speed, ts):
         if self.last_velocity is None:
             self.last_velocity = speed
-            self.last_velocity_ts = time.time()
+            self.last_velocity_ts = ts
             return
 
-        curr_time = time.time()
-        accel = (speed - self.last_velocity) / (curr_time - self.last_velocity_ts )
+        if ts > self.last_velocity_ts:
+            self.speed_pub.publish(Float32(data=speed))
+            accel = (speed - self.last_velocity) / (ts - self.last_velocity_ts)
+            self.filtered_accel = ACC_FILTER_FACTOR * self.filtered_accel + (1 - ACC_FILTER_FACTOR) * accel
+            self.accel_filtered_pub.publish(Float32(data=self.filtered_accel))
+            self.accel_raw_pub.publish(Float32(data=accel))
 
-        self.last_velocity_ts = curr_time
+        self.last_velocity_ts = ts
         self.last_velocity = speed
-
-        self.filtered_accel = ACC_FILTER_FACTOR * self.filtered_accel + (1 - ACC_FILTER_FACTOR) * accel
-        self.accel_filtered_pub.publish(Float32(data=self.filtered_accel))
-        self.accel_raw_pub.publish(Float32(data=accel))
-
 
     def on_throttle_cmd(self, msg):
         if not self.enabled:

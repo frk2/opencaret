@@ -7,4 +7,4 @@ uint32 id
 bool is_extended
 bool is_error
 uint8[] data
-float32 can_timestamp
+float64 can_timestamp
