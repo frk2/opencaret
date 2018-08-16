@@ -42,7 +42,7 @@ case $key in
     ;;
     -h|--help)
     shift
-    echo "run_ros1.sh [--viz] [--record] [--camera]"
+    echo "launch_ros1.sh [--viz] [--record] [--camera]"
     exit 0
     ;;
     *)    # unknown option
