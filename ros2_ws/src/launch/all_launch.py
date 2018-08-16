@@ -35,11 +35,5 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='tf2_ros', node_executable='static_transform_publisher',
             arguments=['0', '0', '0', '0', '0', '0', 'front_camera_link', 'zed_depth_camera']
-        ),
-
-        launch_ros.actions.Node(
-            package='radar', node_executable='viz', output='screen'),
-
-        launch_ros.actions.Node(
-            package='ros1_bridge', node_executable='dynamic_bridge', arguments=['--ridge-all-topics'], output='screen')
+        )
     ])

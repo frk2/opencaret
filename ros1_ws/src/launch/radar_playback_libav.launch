@@ -12,7 +12,6 @@
 <launch>
 
     <arg name="record_root" default="$(dirname)/../../../data/"/>
-    <arg name="bagfile" />
 
     <param name="libav_video_decoder_root_path" value="$(arg record_root)" />
 
@@ -20,8 +19,6 @@
       <param name="libav_video_decoder_stream_topic" value="zed/rgb/image_raw_color/stream" />
       <param name="libav_video_decoder_stream_event_topic" value="zed/rgb/image_raw_color/stream/event" />
     </node>
-
-    <node pkg="rosbag" type="play" name="rosbag_player_rgb" args="-l -d 2 $(arg bagfile)"/>
 
     <node pkg="radar" type="radar_viz.py" name="radar_viz" />
 
