@@ -4,7 +4,6 @@ MODULES=1
 POSITIONAL=()
 
 execute () {
-  echo "Modules $MODULES"
   if [ "$MODULES" == "1" ]; then
     $1 ${POSITIONAL[@]}
   else
