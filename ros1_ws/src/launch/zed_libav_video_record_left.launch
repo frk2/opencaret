@@ -13,6 +13,7 @@
 <launch>
 
   <arg name="record_root" default="$(dirname)/../../../data/"/>
+  <arg name="device_path" default="/dev/video1"/>
 
   <param name="libav_video_encoder_root_path" value="$(arg record_root)" />
   <param name="libav_video_encoder_codec" value="libx265" />
@@ -37,7 +38,7 @@
   <node pkg="ros_libav" type="capture.py" name="libav_capture" >
     <param name="libav_capture_image_topic" value="zed/left/image_raw_color" />
     <param name="libav_capture_format" value="video4linux2" />
-    <param name="libav_capture_device" value="/dev/video1" />
+    <param name="libav_capture_device" value="$(arg device_path)" />
   </node>
 
 </launch>

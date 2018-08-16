@@ -1,3 +1,5 @@
+cwd=$(dirname "$BASH_SOURCE")
+
 USE_CAMERA=1
 
 if [ "$USE_CAMERA" == "1" ]; then
@@ -8,6 +10,8 @@ else
   VIDEO_TOPIC2=""
 fi
 
+pushd $cwd/../data
+
 rosbag record \
 /can_recv \
 /can_send \
@@ -15,7 +19,6 @@ rosbag record \
 /robot_description \
 /rosout \
 /rosout_agg \
-/radar_viz \
 /tf \
 /tf_static \
 /computed_accel_filtered \
@@ -45,3 +48,5 @@ $VIDEO_TOPIC2
 #/zed/point_cloud/cloud_registered \
 #/zed/depth/camera_info \
 #/zed/depth/depth_registered \
+
+popd
