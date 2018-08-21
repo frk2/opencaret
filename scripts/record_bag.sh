@@ -1,5 +1,14 @@
 cwd=$(dirname "$BASH_SOURCE")
 
+function terminate {
+  echo 'Terminating recording...'
+  sleep 5
+  trap - SIGTERM
+}
+
+# sleep here to continue recording while other nodes continue to shutdown
+trap terminate SIGINT SIGTERM
+
 USE_CAMERA=1
 
 if [ "$USE_CAMERA" == "1" ]; then
@@ -48,5 +57,7 @@ $VIDEO_TOPIC2
 #/zed/point_cloud/cloud_registered \
 #/zed/depth/camera_info \
 #/zed/depth/depth_registered \
+
+echo 'Terminated recording.'
 
 popd

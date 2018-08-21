@@ -2,8 +2,8 @@
 <package format="2">
   <name>robot_description</name>
   <version>0.0.1</version>
-  <description>Toyota Radar controller</description>
-  <maintainer email="farazrkhan@gmail.com">Faraz Khan</maintainer>
+  <description>Jose Rojas</description>
+  <maintainer email="jrojas@redlinesolutions.co">Robot Description</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>

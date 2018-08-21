@@ -2,14 +2,16 @@ import rclpy
 import cantools
 import oscc
 import os
+import math
 from rclpy.node import Node
 from opencaret_msgs.msg import CanMessage
 from std_msgs.msg import Float32, Bool
+from sensor_msgs.msg import JointState
 import time
 from util import util
 
 OSCC_MAGIC_NUMBER = 0xcc05
-
+KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
 
 class KiaSoulDriver(Node):
@@ -27,7 +29,9 @@ class KiaSoulDriver(Node):
         self.speed_pub = self.create_publisher(Float32, 'wheel_speed')
         self.accel_filtered_pub = self.create_publisher(Float32, 'computed_accel_filtered')
         self.accel_raw_pub = self.create_publisher(Float32, 'computed_accel_raw')
-        self.steering_angle_pub = self.create_publisher(Float32, 'steering_angle')
+        self.steering_wheel_angle_raw_pub = self.create_publisher(Float32, 'steering/wheel_angle/raw')
+        self.steering_angle_raw_pub = self.create_publisher(Float32, 'steering/yaw_angle/raw')
+        self.steering_joint_states_pub = self.create_publisher(JointState, 'steering/joint_states')
         self.accel_pedal_pub = self.create_publisher(Float32, 'accel_pedal')
         self.brake_pedal_pub = self.create_publisher(Float32, 'brake_pedal')
         self.steering_torque = self.create_publisher(Float32, 'steering_torque')
@@ -47,7 +51,21 @@ class KiaSoulDriver(Node):
                 kia_can_msg = self.kia_db.decode_message(msg.id, bytearray(msg.data))
                 msg_type = self.kia_db.get_message_by_frame_id(msg.id)
                 if msg_type.name == "STEERING_ANGLE":
-                    self.steering_angle_pub.publish(Float32(data=float(kia_can_msg["STEERING_ANGLE_angle"])))
+                    steering_wheel_angle = float(kia_can_msg["STEERING_ANGLE_angle"]) * math.pi / 180.0
+                    steering_wheel_angle_msg = Float32(data=steering_wheel_angle)
+                    yaw_angle_msg = Float32(data=steering_wheel_angle/KIA_SOUL_STEERING_RATIO)
+                    self.steering_wheel_angle_raw_pub.publish(steering_wheel_angle_msg)
+                    self.steering_angle_raw_pub.publish(yaw_angle_msg)
+                    joint_msg = JointState()
+                    joint_msg.header.stamp = util.time_stamp(msg.can_timestamp)
+                    joint_msg.name=["steering_joint", "yaw", "front_left_steer_joint", "front_right_steer_joint"]
+                    joint_msg.position = [
+                        steering_wheel_angle,
+                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
+                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
+                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO
+                    ]
+                    self.steering_joint_states_pub.publish(joint_msg)
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
                     speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))

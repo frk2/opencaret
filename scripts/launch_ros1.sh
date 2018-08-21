@@ -13,7 +13,7 @@ execute () {
   MODULES=$((MODULES - 1))
 }
 
-trap "trap - SIGTERM && sleep 1 && kill -- -$$" SIGINT SIGTERM EXIT
+trap "trap - SIGINT && sleep 5" SIGINT SIGTERM EXIT
 
 cwd=$(dirname "$BASH_SOURCE")
 
@@ -54,14 +54,14 @@ done
 
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ "$ENABLE_RECORD" == "1" ]; then
-  execute "$cwd/record_bag.sh"
+if [ "$ENABLE_VIZ" == "1" ]; then
+  execute "roslaunch $cwd/../ros1_ws/src/launch/visualize.launch"
 fi
 
 if [ "$ENABLE_CAMERA" == "1" ]; then
   execute "$cwd/capture_camera.sh"
 fi
 
-if [ "$ENABLE_VIZ" == "1" ]; then
-  execute "rosrun radar radar_viz.py"
+if [ "$ENABLE_RECORD" == "1" ]; then
+  execute "$cwd/record_bag.sh"
 fi
