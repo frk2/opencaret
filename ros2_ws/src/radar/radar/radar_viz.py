@@ -35,7 +35,7 @@ class RadarViz(rospy_compat.Node):
             p.y = -float(track.lat_dist)
             p.z = 0.0
             c = ColorRGBA()
-            c.a = track.valid_count / (RADAR_VALID_MAX + 1)  # +1 to help with minimum visibility
+            c.a = float(track.valid_count) / RADAR_VALID_MAX
             if track.valid_count > 0:
                 c.r = 1.0
             else:
