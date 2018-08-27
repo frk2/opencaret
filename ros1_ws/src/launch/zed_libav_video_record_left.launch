@@ -14,6 +14,8 @@
 
   <arg name="record_root" default="$(dirname)/../../../data/"/>
   <arg name="device_path" default="/dev/video1"/>
+  <arg name="record" default="1" />
+  <arg name="capture" default="1" />
 
   <param name="libav_video_encoder_root_path" value="$(arg record_root)" />
   <param name="libav_video_encoder_codec" value="libx265" />
@@ -22,23 +24,21 @@
   <param name="libav_video_encoder_framerate" value="10" />
   <param name="libav_capture_video_size" value="3840x1080" />
 
-  <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" clear_params="true" >
+  <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" clear_params="true" output="screen" if="$(arg record)">
     <param name="libav_video_encoder_image_filetype" value="mpg" />
     <param name="libav_video_encoder_image_topic" value="zed/left/image_raw_color" />
     <param name="libav_video_encoder_stream_topic" value="zed/left/image_raw_color/stream" />
     <param name="libav_video_encoder_stream_event_topic" value="zed/left/image_raw_color/stream/event" />
-    <param name="libav_video_encoder_delay" value="0.5" />
+    <param name="libav_video_encoder_delay" value="2.0" />
     <param name="libav_video_encoder_finalize_delay" value="0.75" />
     <param name="libav_video_encoder_video_size" value="1920x1080" />
-    <param name="libav_video_encoder_crop" value="1920:1080:0:0" />
-    <param name="libav_video_encoder_flip_v" value="0" />
-    <param name="libav_video_encoder_flip_h" value="0" />
   </node>
 
-  <node pkg="ros_libav" type="capture.py" name="libav_capture" >
+  <node pkg="ros_libav" type="capture.py" name="libav_capture" output="screen" clear_params="true" if="$(arg capture)">
     <param name="libav_capture_image_topic" value="zed/left/image_raw_color" />
     <param name="libav_capture_format" value="video4linux2" />
     <param name="libav_capture_device" value="$(arg device_path)" />
+    <param name="libav_capture_crop" value="1920:1080:0:0" />
   </node>
 
 </launch>
