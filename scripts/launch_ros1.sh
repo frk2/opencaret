@@ -13,7 +13,7 @@ execute () {
   MODULES=$((MODULES - 1))
 }
 
-trap "trap - SIGINT && sleep 5" SIGINT SIGTERM EXIT
+trap "trap - SIGINT && sleep 5 && kill -- -$$" SIGINT SIGTERM EXIT
 
 cwd=$(dirname "$BASH_SOURCE")
 
@@ -42,7 +42,7 @@ case $key in
     ;;
     -h|--help)
     shift
-    echo "launch_ros1.sh [--viz] [--record] [--camera]"
+    echo "launch_ros1.sh [--viz] [--no-record] [--camera]"
     exit 0
     ;;
     *)    # unknown option
@@ -55,11 +55,15 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "$ENABLE_VIZ" == "1" ]; then
-  execute "roslaunch $cwd/../ros1_ws/src/launch/visualize.launch"
+  execute "$cwd/visualize.sh"
 fi
 
 if [ "$ENABLE_CAMERA" == "1" ]; then
-  execute "$cwd/capture_camera.sh"
+  if [ "$ENABLE_RECORD" == "1" ]; then
+    execute "$cwd/capture_camera.sh"
+  else
+    execute "$cwd/capture_camera.sh --no-record"
+  fi
 fi
 
 if [ "$ENABLE_RECORD" == "1" ]; then

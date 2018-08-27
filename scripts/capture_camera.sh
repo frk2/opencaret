@@ -5,6 +5,8 @@ cwd=$(dirname "$BASH_SOURCE")
 echo $@
 
 USE_ZED=1
+ENABLE_RECORD=1
+ENABLE_CAPTURE=1
 DEVICE_PATH=/dev/video1
 
 POSITIONAL=()
@@ -19,6 +21,14 @@ case $key in
     ;;
     --libav)
     USE_ZED=0
+    shift # past argument
+    ;;
+    --no-capture)
+    ENABLE_CAPTURE=0
+    shift # past argument
+    ;;
+    --no-record)
+    ENABLE_RECORD=0
     shift # past argument
     ;;
     -d|--device)
@@ -48,4 +58,4 @@ else
   LAUNCH_FILE=$cwd/../ros1_ws/src/launch/zed_libav_video_record_left.launch
 fi
 
-roslaunch $LAUNCH_FILE device_path:=$DEVICE_PATH
+roslaunch $LAUNCH_FILE device_path:=$DEVICE_PATH capture:=$ENABLE_CAPTURE record:=$ENABLE_RECORD

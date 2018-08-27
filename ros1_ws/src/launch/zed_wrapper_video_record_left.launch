@@ -13,6 +13,8 @@
 <launch>
 
   <arg name="record_root" default="$(dirname)/../../../data/"/>
+  <arg name="record" default="1" />
+  <arg name="capture" default="1" />
 
   <param name="libav_video_encoder_root_path" value="$(arg record_root)" />
   <param name="libav_video_encoder_codec" value="libx265" />
@@ -21,7 +23,7 @@
   <param name="libav_video_encoder_framerate" value="10" />
   <param name="libav_capture_video_size" value="1920x1080" />
 
-  <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" clear_params="true">
+  <node pkg="ros_libav" type="record.py" name="libav_video_recorder_left" clear_params="true" if="$(arg record)">
     <param name="libav_video_encoder_image_filetype" value="mpg" />
     <param name="libav_video_encoder_image_topic" value="zed/left/image_raw_color" />
     <param name="libav_video_encoder_stream_topic" value="zed/left/image_raw_color/stream" />

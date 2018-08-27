@@ -21,6 +21,7 @@ execute () {
 trap "trap - SIGTERM && sleep 1 && kill -- -$$" SIGINT SIGTERM EXIT
 
 ENABLE_BRIDGE=0
+LAUNCH_FILE="$cwd/../ros2_ws/src/launch/all_launch.py"
 
 while [[ $# -gt 0 ]]
 do
@@ -32,9 +33,13 @@ case $key in
     MODULES=$((MODULES + 1))
     shift
     ;;
+    --sensors)
+    LAUNCH_FILE="$cwd/../ros2_ws/src/launch/sensors_launch.py"
+    shift
+    ;;
     -h|--help)
     shift
-    echo "launch_ros2.sh [--bridge]"
+    echo "launch_ros2.sh [--bridge] [--sensors]"
     exit 0
     ;;
     *)    # unknown option
@@ -44,10 +49,10 @@ case $key in
 esac
 done
 
-execute "ros2 launch $cwd/../ros2_ws/src/launch/all_launch.py"
-
 if [ "$ENABLE_BRIDGE" == "1" ]; then
   export ROS_MASTER_URI=http://localhost:11311
   echo 'Launching ROS1 Bridge'
   execute "ros2 run ros1_bridge dynamic_bridge"
 fi
+
+execute "ros2 launch $LAUNCH_FILE"
