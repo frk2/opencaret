@@ -1,0 +1,13 @@
+<launch>
+
+    <node pkg="radar" type="radar_viz.py" name="radar_viz" />
+
+    <param name="robot_description" textfile="$(dirname)/../../../data/kia_soul/robot_description.urdf" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state" >
+    </node>
+
+    <node name="joint_state_publisher" pkg="robot_description" type="joint_state_publisher.py" >
+    </node>
+
+</launch>

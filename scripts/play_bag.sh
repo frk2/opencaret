@@ -1,5 +1,5 @@
 bagfile=$1
-cwd=$(dirname "$0")
+cwd=$(dirname "$BASH_SOURCE")
 
 if [ "$bagfile" == '' ]; then
   # use the latest

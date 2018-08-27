@@ -43,14 +43,31 @@ def init_node(node_obj, name, log_level=None):
     if use_ros_1:
         rospy.init_node(name, log_level=log_level)
 
-def launch_node(type):
+def launch_node(type, sleep=0.1):
     global node
+
     if use_ros_1:
         node = type()
-        rospy.spin()
+        if hasattr(type, 'on_run') and callable(getattr(type, 'on_run')):
+            rate = rospy.Rate(1.0/sleep)
+            while not rospy.is_shutdown():
+                node.on_run()
+                rate.sleep()
+        else:
+            rospy.spin()
     else:
         rclpy.init()
         node = type()
-        rclpy.spin(node)
+        if hasattr(type, 'on_run') and callable(getattr(type, 'on_run')):
+            executor = rclpy.get_global_executor()
+            try:
+                executor.add_node(node)
+                while rclpy.ok():
+                    executor.spin_once(timeout_sec=sleep)
+                    node.on_run()
+            finally:
+                executor.remove_node(node)
+        else:
+            rclpy.spin(node)
         node.destroy_node()
         rclpy.shutdown()
