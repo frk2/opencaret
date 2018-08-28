@@ -15,4 +15,11 @@
     <node name="joint_state_publisher" pkg="robot_description" type="joint_state_publisher.py" >
     </node>
 
+    <node pkg="tf" type="static_transform_publisher" name="map_baselink_broadcaster" args="0 0 0 0 0 0 map base_link 100" />
+
+    <node pkg="ros_libav" type="playback.py" name="libav_video_player" if="$(arg playback)">
+      <param name="libav_video_decoder_stream_topic" value="zed/left/image_raw_color/stream" />
+      <param name="libav_video_decoder_stream_event_topic" value="zed/left/image_raw_color/stream/event" />
+    </node>
+
 </launch>
