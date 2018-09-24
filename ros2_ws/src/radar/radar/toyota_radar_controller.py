@@ -1,12 +1,12 @@
 import cantools
 import rclpy
-import time
 from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
 from rclpy.node import Node
 from util import util
 from radar import RADAR_VALID_MAX
 import os.path
 import opendbc
+from radar.radar_track_ukf import RadarTrackUKF
 
 
 class ECU:
@@ -77,10 +77,10 @@ class ToyotaRadarController(Node):
 
         # only need to create these once, they are not recreated in the message loop
         for i in range(0, self.RADAR_TRACK_ID_RANGE):
-            track = RadarTrack()
-            track.track_id = i
-            track.valid_count = 0
-            track.valid = False
+            track = (RadarTrack(), RadarTrackUKF())
+            track[0].track_id = i
+            track[0].valid_count = 0
+            track[0].valid = False
             self.cache_radar_tracks[i] = track
 
         self.reset_tracks()
@@ -109,7 +109,7 @@ class ToyotaRadarController(Node):
                     current_radar_accels = self.current_radar_accels
 
                     # decrease the valid count for all of the tracks that were missing
-                    for k, track in self.cache_radar_tracks.items():
+                    for k, (track, ukf) in self.cache_radar_tracks.items():
                         if k not in self.current_track_ids:
                             valid_count = track.valid_count = max(0, track.valid_count - 1)
                             if valid_count > 0:
@@ -133,11 +133,13 @@ class ToyotaRadarController(Node):
                 if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ID_END:
 
                     track_id = can_msg.id - self.RADAR_TRACK_ID_START
-                    track = self.cache_radar_tracks[track_id]
+                    track, track_ukf = self.cache_radar_tracks[track_id]
 
                     if msg['LONG_DIST'] >=255 or msg['NEW_TRACK']:
+                        track_ukf.reset()
                         track.valid_count = 0 # reset counter
 
+                    est_dist, est_vel  = track_ukf.update(float(msg["LONG_DIST"]), float(msg["REL_SPEED"]))
                     curr_valid_count = track.valid_count
                     curr_valid_count += (1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1)
                     curr_valid_count = min(RADAR_VALID_MAX, max(0, curr_valid_count))
@@ -146,8 +148,8 @@ class ToyotaRadarController(Node):
 
                     track.counter = msg["COUNTER"]
                     track.lat_dist = msg["LAT_DIST"]
-                    track.lng_dist = msg["LONG_DIST"]
-                    track.rel_speed = msg["REL_SPEED"]
+                    track.lng_dist = est_dist
+                    track.rel_speed = est_vel
                     track.new_track = bool(msg["NEW_TRACK"])
                     track.valid_count = curr_valid_count
                     track.valid = bool(msg["VALID"])
