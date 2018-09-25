@@ -17,6 +17,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(opencaret_msgs
   "msg/Time.msg"
@@ -26,7 +27,9 @@ rosidl_generate_interfaces(opencaret_msgs
   "msg/RadarTracks.msg"
   "msg/LeadVehicle.msg"
   "msg/LongitudinalPlan.msg"
-  DEPENDENCIES builtin_interfaces
+  "msg/Obstacle.msg"
+  "msg/Obstacles.msg"
+  DEPENDENCIES builtin_interfaces geometry_msgs
 )
 
 ament_package()

@@ -136,7 +136,7 @@ class ToyotaRadarController(Node):
                     track, track_ukf = self.cache_radar_tracks[track_id]
 
                     if msg['LONG_DIST'] >=255 or msg['NEW_TRACK']:
-                        track_ukf.reset()
+                        track_ukf.reset(i_dist=float(msg["LONG_DIST"]), i_vel=float(msg["REL_SPEED"]))
                         track.valid_count = 0 # reset counter
 
                     est_dist, est_vel  = track_ukf.update(float(msg["LONG_DIST"]), float(msg["REL_SPEED"]))
@@ -148,8 +148,10 @@ class ToyotaRadarController(Node):
 
                     track.counter = msg["COUNTER"]
                     track.lat_dist = msg["LAT_DIST"]
-                    track.lng_dist = est_dist
-                    track.rel_speed = est_vel
+                    track.lng_dist = msg["LONG_DIST"]
+                    track.rel_speed = msg["REL_SPEED"]
+                    track.filt_lng_dist = est_dist
+                    track.filt_rel_speed = est_vel
                     track.new_track = bool(msg["NEW_TRACK"])
                     track.valid_count = curr_valid_count
                     track.valid = bool(msg["VALID"])

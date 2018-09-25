@@ -30,22 +30,31 @@ class RadarViz(rospy_compat.Node):
         marker.color.a = 1.0
         marker.points = []
         for track in msg.radar_tracks:
-            p = Point()
-            p.x = float(track.lng_dist)
-            p.y = -float(track.lat_dist)
-            p.z = 0.0
-            c = ColorRGBA()
-            c.a = float(track.valid_count) / RADAR_VALID_MAX
-            if track.valid_count > 0:
-                c.r = 1.0
-            else:
-                c.a = 1.0
-                c.r = c.g = c.b = 0.5
+            p, c = self.get_marker_pc_for_track(track.lat_dist, track.lng_dist, track.valid_count)
+            marker.points.append(p)
+            marker.colors.append(c)
+
+            # For the filtered track
+            p, c = self.get_marker_pc_for_track(track.lat_dist, track.filt_lng_dist, track.valid_count)
+            c = ColorRGBA(0., 1.0, 0.0, 1.0)
             marker.points.append(p)
             marker.colors.append(c)
 
         self.radar_rviz_pub.publish(marker)
 
+    def get_marker_pc_for_track(self, lat_dist, lng_dist, valid_count):
+        p = Point()
+        p.x = float(lng_dist)
+        p.y = -float(lat_dist)
+        p.z = 0.0
+        c = ColorRGBA()
+        c.a = float(valid_count) / RADAR_VALID_MAX
+        if valid_count > 0:
+            c.r = 1.0
+        else:
+            c.a = 1.0
+            c.r = c.g = c.b = 0.5
+        return p, c
 
 def main():
     rospy_compat.launch_node(RadarViz)
