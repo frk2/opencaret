@@ -1,5 +1,6 @@
-from opencaret_msgs.msg import LeadVehicle
+from opencaret_msgs.msg import Obstacle
 from std_msgs.msg import Float32,Bool
+from geometry_msgs.msg import Point
 from rclpy.node import Node
 import sys
 import rclpy
@@ -16,7 +17,7 @@ class FakeLeadVehicle(Node):
         self.time_since_last_update = None
         self.last_ego_speed = None
         self.current_ego_speed = 0
-        self.lead_vehicle_pub = self.create_publisher(LeadVehicle, '/lead_vehicle')
+        self.lead_obs_pub = self.create_publisher(Obstacle, '/lead_obstacle')
         self.lead_vehicle_velocity = self.create_publisher(Float32, '/lead_vehicle_velocity')
         self.lead_vehilce_distance = self.create_publisher(Float32, '/lead_vehicle_distance')
         self.velocity_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
@@ -51,12 +52,12 @@ class FakeLeadVehicle(Node):
         self.distance = max(0.0, self.distance)
         if self.velocity == 0:
             self.accel = 0.0
-        lead_vehicle_msg = LeadVehicle()
-        lead_vehicle_msg.distance = self.distance
-        lead_vehicle_msg.velocity = self.velocity
-        lead_vehicle_msg.accel = self.accel
-        print(lead_vehicle_msg)
-        self.lead_vehicle_pub.publish(lead_vehicle_msg)
+
+        lead_obs_msg = Obstacle()
+        lead_obs_msg.point = Point(self.distance, 0)
+        lead_obs_msg.relative_speed = self.velocity - self.current_ego_speed
+        print(lead_obs_msg)
+        self.lead_obs_pub.publish(lead_obs_msg)
         self.lead_vehicle_velocity.publish(Float32(data=self.velocity))
         self.lead_vehilce_distance.publish(Float32(data=self.distance))
 

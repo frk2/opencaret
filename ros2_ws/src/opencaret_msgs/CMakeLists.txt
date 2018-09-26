@@ -25,7 +25,6 @@ rosidl_generate_interfaces(opencaret_msgs
   "msg/RadarTrack.msg"
   "msg/RadarTrackAccel.msg"
   "msg/RadarTracks.msg"
-  "msg/LeadVehicle.msg"
   "msg/LongitudinalPlan.msg"
   "msg/Obstacle.msg"
   "msg/Obstacles.msg"

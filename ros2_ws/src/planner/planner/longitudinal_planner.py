@@ -4,7 +4,7 @@ import cvxpy as cvx
 from util import util
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
-from opencaret_msgs.msg import LeadVehicle, LongitudinalPlan
+from opencaret_msgs.msg import Obstacle, LongitudinalPlan
 import time
 import math
 import numpy as np
@@ -41,7 +41,7 @@ class LongitudinalPlanner(Node):
         self.solver = self.init_mpc_solver()
         self.cruising_speed_sub = self.create_subscription(Float32, 'cruising_speed', self.on_cruising_speed)
         self.speed_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
-        self.lead_car_sub = self.create_subscription(LeadVehicle, 'lead_vehicle', self.on_lead_vehicle)
+        self.lead_car_sub = self.create_subscription(Obstacle, 'lead_obstacle', self.on_lead_obstacle)
         self.imu_sub = self.create_subscription(Imu, 'imu', self.on_imu)
         self.computed_accel_sub = self.create_subscription(Float32, 'computed_accel_filtered', self.on_computed_accel)
 
@@ -57,10 +57,10 @@ class LongitudinalPlanner(Node):
     def on_computed_accel(self, msg):
         self.a_ego.value = msg.data
 
-    def on_lead_vehicle(self, msg):
-        self.x_lead.value = min(INITIAL_DISTANCE_TO_LEAD_CAR, msg.distance)
-        self.v_lead.value= msg.velocity
-        self.a_lead.value = msg.accel
+    def on_lead_obstacle(self, msg):
+        self.x_lead.value = min(INITIAL_DISTANCE_TO_LEAD_CAR, msg.point.x)
+        self.v_lead.value= msg.relative_speed + float(self.v_ego.value)
+        self.a_lead.value = 0
 
     def on_imu(self, msg):
         self.a_ego.value = msg.linear_acceleration.x

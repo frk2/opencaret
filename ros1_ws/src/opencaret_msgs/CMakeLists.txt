@@ -5,7 +5,7 @@ find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport message_genera
 
 # add the resized image message
 add_message_files(DIRECTORY msg
-	FILES Time.msg CanMessage.msg RadarTrack.msg RadarTrackAccel.msg RadarTracks.msg LongitudinalPlan.msg LeadVehicle.msg Obstacle.msg Obstacles.msg
+	FILES Time.msg CanMessage.msg RadarTrack.msg RadarTrackAccel.msg RadarTracks.msg LongitudinalPlan.msg Obstacle.msg Obstacles.msg
 )
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
 
