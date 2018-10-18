@@ -1,12 +1,13 @@
+import os.path
+
 import cantools
+import opendbc
 import rclpy
 from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
+from radar import RADAR_VALID_MAX
+from radar.radar_track_ukf import RadarTrackUKF
 from rclpy.node import Node
 from util import util
-from radar import RADAR_VALID_MAX
-import os.path
-import opendbc
-from radar.radar_track_ukf import RadarTrackUKF
 
 
 class ECU:
@@ -66,7 +67,7 @@ class ToyotaRadarController(Node):
 
         # This triggers self.power_on_radar() @ 100hz.
         # Based on OpenPilot, this is the base update rate required for delivering the CAN messages defined in STATIC_MSGS
-        self.power_on_timer = self.create_timer(1.0 / 100.0, self.power_on_radar)
+        self.power_on_timer = self.create_timer(1.0 / 50.0, self.power_on_radar)
         self.radar_is_on = False
         self.frame = 0
         self.last_update_ms = util.ms_since_epoch()
@@ -81,6 +82,7 @@ class ToyotaRadarController(Node):
             track[0].track_id = i
             track[0].valid_count = 0
             track[0].valid = False
+            track[0].can_timestamp = 0.
             self.cache_radar_tracks[i] = track
 
         self.reset_tracks()
@@ -110,12 +112,14 @@ class ToyotaRadarController(Node):
 
                     # decrease the valid count for all of the tracks that were missing
                     for k, (track, ukf) in self.cache_radar_tracks.items():
-                        if k not in self.current_track_ids:
-                            valid_count = track.valid_count = max(0, track.valid_count - 1)
-                            if valid_count > 0:
-                                # add track to list from cache, with a invalid flag, but no accel for simplicity's sake
-                                track.counter = self.current_radar_counter
-                                track.valid = False
+                    #     if k not in self.current_track_ids:
+                    #         valid_count = track.valid_count = max(0, track.valid_count - 1)
+                    #         if valid_count > 0:
+                    #             # add track to list from cache, with a invalid flag, but no accel for simplicity's sake
+                    #             track.counter = self.current_radar_counter
+                    #             track.valid = False
+                    #         else:
+                    #             ukf.reset()
 
                         if k in self.current_track_ids or track.valid_count > 0:
                             current_radar_tracks.append(track)
@@ -134,12 +138,39 @@ class ToyotaRadarController(Node):
 
                     track_id = can_msg.id - self.RADAR_TRACK_ID_START
                     track, track_ukf = self.cache_radar_tracks[track_id]
-
-                    if msg['LONG_DIST'] >=255 or msg['NEW_TRACK']:
-                        track_ukf.reset(i_dist=float(msg["LONG_DIST"]), i_vel=float(msg["REL_SPEED"]))
+                    time_elapsed = 0
+                    if msg['LONG_DIST'] >=255 or msg['NEW_TRACK'] or track.can_timestamp == 0.:
+                        est_dist, est_vel = float(msg["LONG_DIST"]), -float(msg["REL_SPEED"])
+                        if msg['LONG_DIST'] >= 255:
+                            est_dist = 255.0
+                            est_vel = 0.0
+                        track_ukf.reset(i_dist=est_dist, i_vel=est_vel)
                         track.valid_count = 0 # reset counter
+                        track.can_timestamp = can_msg.can_timestamp
+                        if track_id == 13:
+                            self.get_logger().warn("RESET track id: {} vc: {} with estdist: {}, estvel: {},"
+                                                   "realdist:{}, realvel:{}, time: {}".format(track.track_id,
+                                                                                              track.valid_count,
+                                                                                              est_dist, est_vel,
+                                                                                              msg["LONG_DIST"],
+                                                                                              msg["REL_SPEED"],
+                                                                                              time_elapsed))
+                    else:
+                        time_elapsed = can_msg.can_timestamp - track.can_timestamp
+                        est_dist, est_vel = track_ukf.update(float(msg["LONG_DIST"]), -float(msg["REL_SPEED"]), time_elapsed)
+                        track.filt_lng_dist = est_dist
+                        track.filt_rel_speed = est_vel
+                        track.can_timestamp = can_msg.can_timestamp
 
-                    est_dist, est_vel  = track_ukf.update(float(msg["LONG_DIST"]), float(msg["REL_SPEED"]))
+                        if track_id == 13:
+                            self.get_logger().warn("UPDATE track id: {} vc: {} with estdist: {}, estvel: {},"
+                                                   "realdist:{}, realvel:{}, time: {}".format(track.track_id,
+                                                                                              track.valid_count,
+                                                                                              est_dist, est_vel,
+                                                                                              msg["LONG_DIST"],
+                                                                                              msg["REL_SPEED"],
+                                                                                              time_elapsed))
+
                     curr_valid_count = track.valid_count
                     curr_valid_count += (1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1)
                     curr_valid_count = min(RADAR_VALID_MAX, max(0, curr_valid_count))
@@ -150,8 +181,6 @@ class ToyotaRadarController(Node):
                     track.lat_dist = msg["LAT_DIST"]
                     track.lng_dist = msg["LONG_DIST"]
                     track.rel_speed = msg["REL_SPEED"]
-                    track.filt_lng_dist = est_dist
-                    track.filt_rel_speed = est_vel
                     track.new_track = bool(msg["NEW_TRACK"])
                     track.valid_count = curr_valid_count
                     track.valid = bool(msg["VALID"])

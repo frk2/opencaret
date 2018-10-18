@@ -55,10 +55,11 @@ class RadarViz(rospy_compat.Node):
             marker.colors.append(c)
 
             # For the filtered track
-            p, c = self.get_marker_pc_for_track(track.lat_dist, track.filt_lng_dist, track.valid_count)
-            c = ColorRGBA(0., 1.0, 0.0, 1.0)
-            marker.points.append(p)
-            marker.colors.append(c)
+            # if track.valid_count > 0:
+            # p, c = self.get_marker_pc_for_track(track.lat_dist, track.filt_lng_dist, track.valid_count)
+            # c = ColorRGBA(0., 1.0, 0.0, 0.7)
+            # marker.points.append(p)
+            # marker.colors.append(c)
 
         self.radar_rviz_pub.publish(marker)
 

@@ -6,6 +6,7 @@ from rclpy.node import Node
 import rclpy
 
 CAR_WIDTH = 3.0
+DEFAULT_OBSTACLE_DISTANCE = 200.0
 
 class ObstacleTracker(Node):
     VALIDITY_THRESH = 1
@@ -22,12 +23,13 @@ class ObstacleTracker(Node):
         points_list = []
         usable_radar_tracks = []
         for track in tracks_msg.radar_tracks:
-            if track.valid_count > ObstacleTracker.VALIDITY_THRESH and track.filt_lng_dist > 0.0:
-                points_list.append([track.filt_lng_dist, track.lat_dist])
+            if track.valid_count > ObstacleTracker.VALIDITY_THRESH and track.lng_dist > 0.0:
+                points_list.append([track.lng_dist, track.lat_dist])
                 usable_radar_tracks.append(track)
+
+        obstacles = Obstacles()
         if len(points_list) > 0:
             dbscan = DBSCAN(eps=5.0, min_samples=1).fit(points_list)
-            obstacles = Obstacles()
             clusters = [list() for i in range(len(dbscan.labels_))]
             self.get_logger().debug("Raw: {}".format(points_list))
             for i in range(len(dbscan.labels_)):
@@ -36,14 +38,18 @@ class ObstacleTracker(Node):
             for cluster in clusters:
                 # calculate closest radar track:
                 if len(cluster) > 0:
-                    sorted_tracks = sorted(cluster, key=lambda track:track.filt_lng_dist)
+                    sorted_tracks = sorted(cluster, key=lambda track:track.lng_dist)
                     closest_track = sorted_tracks[0]
-                    obstacles.obstacles.append(Obstacle(point=Point(x=closest_track.filt_lng_dist, y=closest_track.lat_dist),
-                                                        relative_speed=closest_track.filt_rel_speed))
-            self.radar_obstacles = obstacles.obstacles
+                    obstacles.obstacles.append(Obstacle(point=Point(x=closest_track.lng_dist, y=closest_track.lat_dist),
+                                                        relative_speed=closest_track.rel_speed))
+
             self.get_logger().debug("Raw Input: \n {}, obstacles: {} \n Clusters: {} "
-                                    "labels: {} \n clustersize: {}\n".format(points_list,obstacles, clusters, dbscan.labels_, len(clusters)))
-            self.calculate_and_publish_lead()
+                                    "labels: {} \n clustersize: {}\n".format(points_list, obstacles, clusters,
+                                                                             dbscan.labels_, len(clusters)))
+        else:
+            obstacles.obstacles.append(Obstacle(point=Point(x=DEFAULT_OBSTACLE_DISTANCE, y=0.), relative_speed=0.))
+        self.radar_obstacles = obstacles.obstacles
+        self.calculate_and_publish_lead()
 
     def calculate_and_publish_lead(self):
         # filter out all tracks not in the direct path of the vehicle
