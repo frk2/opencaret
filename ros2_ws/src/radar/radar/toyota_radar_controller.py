@@ -147,14 +147,14 @@ class ToyotaRadarController(Node):
                         track_ukf.reset(i_dist=est_dist, i_vel=est_vel)
                         track.valid_count = 0 # reset counter
                         track.can_timestamp = can_msg.can_timestamp
-                        if track_id == 13:
-                            self.get_logger().warn("RESET track id: {} vc: {} with estdist: {}, estvel: {},"
-                                                   "realdist:{}, realvel:{}, time: {}".format(track.track_id,
-                                                                                              track.valid_count,
-                                                                                              est_dist, est_vel,
-                                                                                              msg["LONG_DIST"],
-                                                                                              msg["REL_SPEED"],
-                                                                                              time_elapsed))
+                        # if track_id == 13:
+                        #     self.get_logger().warn("RESET track id: {} vc: {} with estdist: {}, estvel: {},"
+                        #                            "realdist:{}, realvel:{}, time: {}".format(track.track_id,
+                        #                                                                       track.valid_count,
+                        #                                                                       est_dist, est_vel,
+                        #                                                                       msg["LONG_DIST"],
+                        #                                                                       msg["REL_SPEED"],
+                        #                                                                       time_elapsed))
                     else:
                         time_elapsed = can_msg.can_timestamp - track.can_timestamp
                         est_dist, est_vel = track_ukf.update(float(msg["LONG_DIST"]), -float(msg["REL_SPEED"]), time_elapsed)
@@ -162,14 +162,14 @@ class ToyotaRadarController(Node):
                         track.filt_rel_speed = est_vel
                         track.can_timestamp = can_msg.can_timestamp
 
-                        if track_id == 13:
-                            self.get_logger().warn("UPDATE track id: {} vc: {} with estdist: {}, estvel: {},"
-                                                   "realdist:{}, realvel:{}, time: {}".format(track.track_id,
-                                                                                              track.valid_count,
-                                                                                              est_dist, est_vel,
-                                                                                              msg["LONG_DIST"],
-                                                                                              msg["REL_SPEED"],
-                                                                                              time_elapsed))
+                        # if track_id == 13:
+                        #     self.get_logger().warn("UPDATE track id: {} vc: {} with estdist: {}, estvel: {},"
+                        #                            "realdist:{}, realvel:{}, time: {}".format(track.track_id,
+                        #                                                                       track.valid_count,
+                        #                                                                       est_dist, est_vel,
+                        #                                                                       msg["LONG_DIST"],
+                        #                                                                       msg["REL_SPEED"],
+                        #                                                                       time_elapsed))
 
                     curr_valid_count = track.valid_count
                     curr_valid_count += (1 if msg["VALID"] and msg['LONG_DIST'] < 255 else -1)

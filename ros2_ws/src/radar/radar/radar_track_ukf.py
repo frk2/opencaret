@@ -2,16 +2,16 @@ import filterpy.kalman
 import filterpy.common
 import numpy as np
 
-STD_DEV_RADAR_LNG = 5.
-STD_DEV_RADAR_VEL = 0.01
+STD_DEV_RADAR_LNG = 1.0
+STD_DEV_RADAR_VEL = 0.05
 PROCESS_STD_DEV = 0.1
 
 
 class RadarTrackUKF:
-    DT = 0.2
+    DT = 0.1
 
     def fx(self, x, dt):
-        F = np.array([[1, -dt],
+        F = np.array([[1, dt],
                       [0, 1]])
         return np.dot(F, x)
 
