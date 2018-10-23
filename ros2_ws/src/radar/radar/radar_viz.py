@@ -18,7 +18,7 @@ class RadarViz(rospy_compat.Node):
         marker = Marker()
         marker.header.frame_id = "middle_radar_link"
         if rospy_compat.use_ros_1:
-            marker.header.stamp = rospy_compat.rospy.Time.now()
+            marker.header.stamp = rospy_compat.rospy.Time(secs=msg.stamp.sec, nsecs=msg.stamp.nanosec)
         marker.ns = "radar_tracks"
         marker.id = 1
         marker.type = Marker.POINTS
@@ -36,7 +36,7 @@ class RadarViz(rospy_compat.Node):
             p.z = 0.0
             c = ColorRGBA()
             c.a = float(track.valid_count) / RADAR_VALID_MAX
-            if track.valid_count > 0:
+            if track.valid == True:
                 c.r = 1.0
             else:
                 c.a = 1.0

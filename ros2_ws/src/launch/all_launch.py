@@ -17,8 +17,6 @@ def generate_launch_description():
         launch_ros.actions.Node(
            package='planner', node_executable='planner', output='screen'),
         launch_ros.actions.Node(
-            package='canoc', node_executable='transceiver', arguments=['can0'], output='screen'),
-        launch_ros.actions.Node(
             package='canoc', node_executable='transceiver', arguments=['can1'], output='screen'),
         launch_ros.actions.Node(
             package='robot_state_publisher', node_executable='robot_state_publisher',

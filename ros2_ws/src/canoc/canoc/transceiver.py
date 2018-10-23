@@ -15,7 +15,6 @@ class Transceiver(Node, can.Listener):
     """
 
     # These are the IDs to look for the relevant can buses
-    RADAR_IDS_MATCH = [0x220, 0x221, 0x222, 0x223, 0x224, 0x225]
     CONTROL_IDS_MATCH = [0x73, 0x83, 0x93]
 
     class CanBusListener(can.Listener):
@@ -52,8 +51,7 @@ class Transceiver(Node, can.Listener):
 
     def reset_logical_matching(self):
 
-        self.can_logical_match = {CanMessage.CANTYPE_RADAR: (Transceiver.RADAR_IDS_MATCH, set()),
-                                  CanMessage.CANTYPE_CONTROL: (Transceiver.CONTROL_IDS_MATCH, set())}
+        self.can_logical_match = {CanMessage.CANTYPE_CONTROL: (Transceiver.CONTROL_IDS_MATCH, set())}
 
     def on_send_message(self, msg):
         if self.can_type == msg.interface:

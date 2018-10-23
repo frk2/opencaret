@@ -1,4 +1,5 @@
 import cantools
+import can
 import rclpy
 import time
 from opencaret_msgs.msg import CanMessage, RadarTrack, RadarTrackAccel, RadarTracks
@@ -42,7 +43,7 @@ STATIC_MSGS = [
      '\x0c\x00\x00\x00\x00\x00\x00\x00'),
 ]
 
-class ToyotaRadarController(Node):
+class ToyotaRadarController(Node, can.Listener):
     RADAR_TRACK_ID_START = 528
     RADAR_TRACK_ID_RANGE = 16
     RADAR_TRACK_ID_END = RADAR_TRACK_ID_START + RADAR_TRACK_ID_RANGE - 1  # 543
@@ -55,21 +56,25 @@ class ToyotaRadarController(Node):
 
     def __init__(self):
         super().__init__('radar')
-        # self.tracks_pub = self.create_publisher(String, 'radar_tracks')
-        self.can_pub = self.create_publisher(CanMessage, 'can_send')
+        self.tracks_pub = self.create_publisher(RadarTracks, 'radar_tracks')
+        #self.can_pub = self.create_publisher(CanMessage, 'can_send')
         self.adas_db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_adas.dbc'))
-        self.db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_pt_generated.dbc'),
-                                        strict=False)
 
-        self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
+        #self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.radar_pub = self.create_publisher(RadarTracks, 'radar_tracks')
+
+        self.can_bus = can.interface.Bus(bustype='socketcan', channel='can0', extended=False)
+        self.can_notifier = can.Notifier(self.can_bus, [self], timeout=0.0001)
 
         # This triggers self.power_on_radar() @ 100hz.
         # Based on OpenPilot, this is the base update rate required for delivering the CAN messages defined in STATIC_MSGS
-        self.power_on_timer = self.create_timer(1.0 / 100.0, self.power_on_radar)
+        self.rate = 1.0 / 100.0
+        #self.power_on_timer = self.create_timer(self.rate, self.power_on_radar)
         self.radar_is_on = False
         self.frame = 0
-        self.last_update_ms = util.ms_since_epoch()
+        self.start_time = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+        self.ticks = 0
+
         self.current_radar_counter = 0
         self.current_track_ids = {}
         self.current_radar_accels = []
@@ -89,17 +94,36 @@ class ToyotaRadarController(Node):
         self.current_track_ids = {}
         self.current_radar_accels = []
 
+    def on_message_received(self, msg):
+        outmsg = CanMessage()
+        outmsg.interface = CanMessage.CANTYPE_RADAR
+        outmsg.id = msg.arbitration_id
+        outmsg.can_timestamp = msg.timestamp
+        outmsg.data = list(msg.data)
+        outmsg.is_extended = msg.is_extended_id
+        outmsg.is_error = msg.is_error_frame
+        self.on_can_message(outmsg)
+
+    def on_loop(self):
+        ct = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+        ticks = (ct - self.start_time) / self.rate
+
+        if int(ticks) != self.ticks:
+            self.power_on_radar()
+            self.ticks = ticks
+
     def power_on_radar(self):
         for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
             if self.frame % fr_step == 0:
                 tosend = bytearray()
                 tosend.extend(map(ord, vl))
-                # XXX This might be incorrect... interface might need to use the 'bus' variable
-                message = CanMessage(id=addr, interface=CanMessage.CANTYPE_RADAR, data=tosend)
-                self.can_pub.publish(message)
+                message = can.Message(arbitration_id=addr, data=tosend, extended_id=False)
+                self.can_bus.send(message)
+
         self.frame += 1.
 
     def on_can_message(self, can_msg):
+        #print('receive can radar track message {}'.format(can_msg))
         if can_msg.interface == CanMessage.CANTYPE_RADAR:
             if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
@@ -117,12 +141,13 @@ class ToyotaRadarController(Node):
                                 track.counter = self.current_radar_counter
                                 track.valid = False
 
-                        if k in self.current_track_ids or track.valid_count > 0:
+                        if (k in self.current_track_ids and self.current_track_ids[k]) or track.valid_count > 0:
                             current_radar_tracks.append(track)
 
                     # new update, send this track list
                     if len(current_radar_tracks) > 0 or len(current_radar_accels) > 0:
                         radar_tracks_msg = RadarTracks()
+                        radar_tracks_msg.stamp = util.time_stamp_opencaret(can_msg.can_timestamp)
                         radar_tracks_msg.radar_tracks = current_radar_tracks
                         radar_tracks_msg.radar_accels = current_radar_accels
                         self.radar_pub.publish(radar_tracks_msg)
@@ -152,7 +177,7 @@ class ToyotaRadarController(Node):
                     track.valid_count = curr_valid_count
                     track.valid = bool(msg["VALID"])
 
-                    self.current_track_ids[track_id] = True
+                    self.current_track_ids[track_id] = msg['LONG_DIST'] <=255
 
                     if msg["VALID"] == 1:
                         self.radar_is_on = True
@@ -167,7 +192,9 @@ class ToyotaRadarController(Node):
 def main():
     rclpy.init()
     radar = ToyotaRadarController()
-    rclpy.spin(radar)
+    while rclpy.ok():
+        radar.on_loop()
+        rclpy.spin_once(radar, timeout_sec=radar.rate / 10)
     radar.destroy_node()
     rclpy.shutdown()
 

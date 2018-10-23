@@ -43,11 +43,13 @@ def init_node(node_obj, name, log_level=None):
     if use_ros_1:
         rospy.init_node(name, log_level=log_level)
 
-def launch_node(type, sleep=0.1):
+def launch_node(type, *args, **kargs):
     global node
 
+    sleep = 0.1 if 'sleep' not in kargs else kargs['sleep']
+
     if use_ros_1:
-        node = type()
+        node = type(*args)
         if hasattr(type, 'on_run') and callable(getattr(type, 'on_run')):
             rate = rospy.Rate(1.0/sleep)
             while not rospy.is_shutdown():
@@ -57,7 +59,7 @@ def launch_node(type, sleep=0.1):
             rospy.spin()
     else:
         rclpy.init()
-        node = type()
+        node = type(*args)
         if hasattr(type, 'on_run') and callable(getattr(type, 'on_run')):
             executor = rclpy.get_global_executor()
             try:
