@@ -5,5 +5,5 @@ fi
 
 cwd=$(dirname $BASH_SOURCE)
 
-source $ROS2_ROOT/install/setup.bash
-source $cwd/../ros2_ws/install/local_setup.bash
+source $ROS2_ROOT/install/setup.sh
+source $cwd/../ros2_ws/install/local_setup.sh

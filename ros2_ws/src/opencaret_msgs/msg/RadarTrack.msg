@@ -6,3 +6,6 @@ bool new_track
 float32 rel_speed
 int8 valid_count
 bool valid
+float32 filt_lng_dist
+float32 filt_rel_speed
+float64 can_timestamp

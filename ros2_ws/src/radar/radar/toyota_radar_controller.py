@@ -8,7 +8,7 @@ from util import util
 from radar import RADAR_VALID_MAX
 import os.path
 import opendbc
-
+import sys
 
 class ECU:
     CAM = 0  # camera
@@ -54,7 +54,7 @@ class ToyotaRadarController(Node, can.Listener):
     This radar controller is hardcoded to work only with the Toyota Corolla/Rav4/Camry 2017 Denso unit
     """
 
-    def __init__(self):
+    def __init__(self, bus):
         super().__init__('radar')
         self.tracks_pub = self.create_publisher(RadarTracks, 'radar_tracks')
         #self.can_pub = self.create_publisher(CanMessage, 'can_send')
@@ -63,7 +63,7 @@ class ToyotaRadarController(Node, can.Listener):
         #self.can_sub = self.create_subscription(CanMessage, 'can_recv', self.on_can_message)
         self.radar_pub = self.create_publisher(RadarTracks, 'radar_tracks')
 
-        self.can_bus = can.interface.Bus(bustype='socketcan', channel='can0', extended=False)
+        self.can_bus = can.interface.Bus(bustype='socketcan', channel=bus, extended=False)
         self.can_notifier = can.Notifier(self.can_bus, [self], timeout=0.0001)
 
         # This triggers self.power_on_radar() @ 100hz.
@@ -191,7 +191,7 @@ class ToyotaRadarController(Node, can.Listener):
 
 def main():
     rclpy.init()
-    radar = ToyotaRadarController()
+    radar = ToyotaRadarController(sys.argv[1])
     while rclpy.ok():
         radar.on_loop()
         rclpy.spin_once(radar, timeout_sec=radar.rate / 10)

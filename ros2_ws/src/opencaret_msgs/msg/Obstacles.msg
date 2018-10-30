@@ -1,0 +1,1 @@
+opencaret_msgs/Obstacle[] obstacles
