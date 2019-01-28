@@ -18,7 +18,7 @@ def main():
     filepath = sys.argv[1]
     print("Reading SVO file: {0}".format(filepath))
 
-    init = zcam.PyInitParameters(svo_input_filename=filepath, camera_image_flip=True, svo_real_time_mode=False)
+    init = zcam.PyInitParameters(svo_input_filename=filepath, camera_image_flip=False, svo_real_time_mode=False)
 
     cam = zcam.PyZEDCamera()
     status = cam.open(init)
@@ -32,6 +32,9 @@ def main():
         print(repr(status))
         exit()
 
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Be sure to use lower case
+    out = cv2.VideoWriter('output.mp4', fourcc, 10.0, (1920, 1080))
+
     runtime = zcam.PyRuntimeParameters()
     mat = core.PyMat()
     while True:  # for 'q' key
@@ -42,9 +45,12 @@ def main():
             zed_cuda_ctx.pop_ctx()
             prediction = predictor.infer(npimg, overlay=True)
             zed_cuda_ctx.push_ctx()
-            cv2.imshow('Perception', cv2.cvtColor(np.array(prediction), cv2.COLOR_RGB2BGR))
+            out_image = cv2.cvtColor(np.array(prediction), cv2.COLOR_RGB2BGR)
+            cv2.imshow('Perception', out_image)
+            out.write(out_image)
             key = cv2.waitKey(1)
     cv2.destroyAllWindows()
+    out.release()
     cam.close()
     print("\nFINISH")
 
