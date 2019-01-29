@@ -1,7 +1,7 @@
 string CANTYPE_RADAR = "RADAR"
 string CANTYPE_CONTROL = "CONTROL"
 
-opencaret_msgs/Time stamp
+Header header
 string interface
 uint32 id
 bool is_extended

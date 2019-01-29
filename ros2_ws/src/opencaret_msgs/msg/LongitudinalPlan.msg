@@ -1,4 +1,4 @@
-opencaret_msgs/Time stamp
+Header header
 float32[] dt
 float32[] velocity
 float32[] accel
