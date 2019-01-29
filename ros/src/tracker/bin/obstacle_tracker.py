@@ -88,7 +88,7 @@ class ObstacleTracker():
 
 
 def main():
-    rospy.init_node('obstacle_tracker', anonymous=False, log_level=rospy.DEBUG)
+    rospy.init_node('obstacle_tracker', anonymous=False, log_level=rospy.INFO)
     ObstacleTracker()
     rospy.spin()
 
