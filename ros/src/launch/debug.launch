@@ -1,0 +1,8 @@
+<launch>
+     <include file="$(dirname)/interface.launch"/>
+     <include file="$(dirname)/controls.launch"/>
+     <include file="$(dirname)/rviz.launch"/>
+    <node type="rqt_plot" name="rqt_plot" pkg="rqt_plot" args="/computed_accel_filtered /pid_target_accel \
+    /pid_target_speed /wheel_speed /lead_obstacle/point/x" />
+
+</launch>

@@ -105,7 +105,7 @@ class ToyotaRadarController(can.Listener):
         rate = rospy.Rate(RATE)
         while not rospy.is_shutdown():
             self.power_on_radar()
-        rate.sleep()
+            rate.sleep()
 
     def power_on_radar(self):
         for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
@@ -118,12 +118,11 @@ class ToyotaRadarController(can.Listener):
         self.frame += 1.
 
     def on_can_message(self, can_msg):
-        #print('receive can radar track message {}'.format(can_msg))
+        # print('receive can radar track message {}'.format(can_msg))
         if can_msg.interface == CanMessage.CANTYPE_RADAR:
             if self.RADAR_TRACK_ID_START <= can_msg.id <= self.RADAR_TRACK_ACCEL_ID_END:
                 msg = self.adas_db.decode_message(can_msg.id, bytearray(can_msg.data))
                 if self.current_radar_counter != msg["COUNTER"]:
-
                     current_radar_tracks = []
                     current_radar_accels = self.current_radar_accels
 

@@ -38,7 +38,7 @@ class RadarViz(rospy_compat.Node):
         marker = Marker()
         marker.header.frame_id = "middle_radar_link"
         if rospy_compat.use_ros_1:
-            marker.header.stamp = rospy_compat.rospy.Time(secs=msg.stamp.sec, nsecs=msg.stamp.nanosec)
+            marker.header.stamp = msg.header.stamp
         marker.ns = "radar_tracks"
         marker.id = 1
         marker.type = Marker.POINTS
