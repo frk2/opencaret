@@ -1,0 +1,23 @@
+<!--
+@Author: Jose Rojas <jrojas>
+@Date:   2018-07-12T01:43:12-07:00
+@Email:  jrojas@redlinesolutions.co
+@Project: opencaret
+@Last modified by:   jrojas
+@Last modified time: 2018-07-14T09:13:21-07:00
+@License: MIT License
+@Copyright: Copyright @ 2018, Jose Rojas
+-->
+
+<launch>
+
+    <arg name="record_root" default="$(dirname)/../../../data/"/>
+
+    <param name="libav_video_decoder_root_path" value="$(arg record_root)" />
+
+    <node pkg="ros_libav" type="playback.py" name="libav_video_player">
+      <param name="libav_video_decoder_stream_topic" value="zed/left/image_raw_color/stream" />
+      <param name="libav_video_decoder_stream_event_topic" value="zed/left/image_raw_color/stream/event" />
+    </node>
+
+</launch>

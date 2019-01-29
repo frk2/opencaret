@@ -1,12 +1,12 @@
 [submodule "src/opendbc/opendbc"]
-	path = ros1_ws/src/opendbc/src/opendbc
+	path = ros/src/opendbc/src/opendbc
 	url = git@github.com:frk2/opendbc.git
 [submodule "src/oscc/oscc"]
-	path = ros1_ws/src/oscc/src/oscc
+	path = ros/src/oscc/src/oscc
 	url = git@github.com:frk2/oscc.git
 [submodule "ros1_ws/src/ros_libav"]
-	path = ros1_ws/src/ros_libav
+	path = ros/src/ros_libav
 	url = git@github.com:J-Rojas/ros_libav.git
 [submodule "ros1_ws/src/zed-ros-wrapper"]
-	path = ros1_ws/src/zed-ros-wrapper
+	path = ros/src/zed-ros-wrapper
 	url = git@github.com:frk2/zed-ros-wrapper.git

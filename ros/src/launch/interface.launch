@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch ROS Package Template Node -->
+  <!-- node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/-->
+  <param name="interface" value="vcan0" />
+  <node pkg="canoc" type="transceiver.py" name="transceiver" output="screen"/>
+  <param name="interface" value="vcan1" />
+  <node pkg="radar" type="toyota_radar_controller.py" name="radar" output="screen"/>
+  <node pkg="vehicle" type="kia_soul_driver.py" name="vehicle" output="screen"/>
+
+</launch>

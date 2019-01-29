@@ -52,10 +52,10 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "$USE_ZED" == "1" ]; then
   echo "Launching zed_wrapper_video_record_left.launch"
-  LAUNCH_FILE=$cwd/../ros1_ws/src/launch/zed_wrapper_video_record_left.launch
+  LAUNCH_FILE=$cwd/../ros/src/launch/zed_wrapper_video_record_left.launch
 else
   echo "Launching zed_libav_video_record_left.launch"
-  LAUNCH_FILE=$cwd/../ros1_ws/src/launch/zed_libav_video_record_left.launch
+  LAUNCH_FILE=$cwd/../ros/src/launch/zed_libav_video_record_left.launch
 fi
 
 roslaunch $LAUNCH_FILE device_path:=$DEVICE_PATH capture:=$ENABLE_CAPTURE record:=$ENABLE_RECORD

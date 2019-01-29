@@ -23,6 +23,6 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 echo "Launching zed_wrapper_video_record_left.launch"
-LAUNCH_FILE=$cwd/../ros1_ws/src/launch/visualize.launch
+LAUNCH_FILE=$cwd/../ros/src/launch/visualize.launch
 
 roslaunch $LAUNCH_FILE

@@ -6,4 +6,4 @@ fi
 cwd=$(dirname $BASH_SOURCE)
 
 source $ROS1_ROOT/setup.bash
-source $cwd/../ros1_ws/devel/setup.bash
+source $cwd/../ros/devel/setup.bash

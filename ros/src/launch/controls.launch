@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch ROS Package Template Node -->
+  <!-- node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/-->
+  <node pkg="tracker" type="obstacle_tracker.py" name="tracker" output="screen"/>
+  <node pkg="planner" type="longitudinal_planner.py" name="planner" output="screen"/>
+  <node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/>
+</launch>

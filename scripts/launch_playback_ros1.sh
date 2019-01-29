@@ -9,7 +9,7 @@ fi
 
 # launch playback
 
-roslaunch $cwd/../ros1_ws/src/launch/visualize.launch playback:=1 &
+roslaunch $cwd/../ros/src/launch/visualize.launch playback:=1 &
 
 # rosbag play
 $cwd/play_bag.sh $@
