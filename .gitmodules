@@ -10,3 +10,9 @@
 [submodule "ros1_ws/src/zed-ros-wrapper"]
 	path = ros/src/zed-ros-wrapper
 	url = git@github.com:frk2/zed-ros-wrapper.git
+[submodule "ros/src/opendbc/src/opendbc"]
+	path = ros/src/opendbc/src/opendbc
+	url = git@github.com:frk2/opendbc.git
+[submodule "ros/src/oscc/src/oscc"]
+	path = ros/src/oscc/src/oscc
+	url = git@github.com:frk2/oscc.git

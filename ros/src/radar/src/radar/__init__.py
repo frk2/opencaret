@@ -1,0 +1,1 @@
+RADAR_VALID_MAX = 10
