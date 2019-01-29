@@ -1,1 +1,0 @@
-../../../../../ros2_ws/src/util/util/rospy_compat.py
