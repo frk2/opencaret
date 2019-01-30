@@ -8,6 +8,8 @@ from sensor_msgs.msg import JointState
 from util import util
 import rospy
 import os
+import struct
+
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
@@ -36,7 +38,7 @@ class KiaSoulDriver():
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
         self.accel_pedal_pub = rospy.Publisher('/accel_pedal', Float32, queue_size=1)
         self.brake_pedal_pub = rospy.Publisher('/brake_pedal', Float32, queue_size=1)
-        # self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
+        self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
         self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
         self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
 
@@ -79,14 +81,18 @@ class KiaSoulDriver():
                 # enabled or not. In the future this should be changed to
                 # throttle/brake/steering values but that requires a firmware change
                 # to the OSCC
-                return
                 oscc_can_msg = self.oscc_db.decode_message(msg.id, bytearray(msg.data))
-                if oscc_can_msg.name == "BRAKE_REPORT":
-                    self.brake_pedal_pub.publish(oscc_can_msg.brake_report_enabled)
-                elif oscc_can_msg.name == "STEERING_REPORT":
-                    self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
-                elif oscc_can_msg.name == "THROTTLE_REPORT":
-                    self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
+                msg_type = self.oscc_db.get_message_by_frame_id(msg.id)
+
+                # if oscc_can_msg.name == "BRAKE_REPORT":
+                #     # self.brake_pedal_pub.publish(oscc_can_msg.brake_report_enabled)
+                # elif oscc_can_msg.name == "STEERING_REPORT":
+                #     self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
+                # el
+                if msg_type.name == "STEERING_REPORT":
+                    _,_,_,torque = struct.unpack_from("hccf", msg.data)
+                    self.steering_torque.publish(Float32(data=torque / 12.7))
+                    # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
     def calc_steering_accel(self, steering, ts):
         if self.last_steering_angle is None:
