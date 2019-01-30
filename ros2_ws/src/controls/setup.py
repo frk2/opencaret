@@ -11,7 +11,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'longitudinal_control = controls.longitudinal_control:main'
+            'longitudinal_control = controls.longitudinal_control:main',
+            'razor_imu = controls.razor_imu:main'
         ],
     },
 )

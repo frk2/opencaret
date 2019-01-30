@@ -8,7 +8,7 @@ from opencaret_msgs.msg import Obstacle, LongitudinalPlan
 import time
 import math
 import numpy as np
-INITIAL_CRUISING_SPEED = 10.0
+INITIAL_CRUISING_SPEED = 30.0
 INITIAL_DISTANCE_TO_LEAD_CAR = 100.0
 
 
@@ -18,7 +18,7 @@ class LongitudinalPlanner(Node):
         super(LongitudinalPlanner, self).__init__('longitudinal_planner')
         self.T = 20
         self.dt = 0.2
-        self.min_follow_distance = cvx.Parameter(value=6.0)
+        self.min_follow_distance = cvx.Parameter(value=10.0)
         self.max_acceleration = cvx.Parameter(value=5.0)
         self.min_acceleration = cvx.Parameter(value=-5.0)
         self.min_max_jerk = cvx.Parameter(value=3.0)
@@ -69,7 +69,7 @@ class LongitudinalPlanner(Node):
         states = []
         for t in range(self.T):
             cost = cvx.sum_squares(self.v[t + 1] - self.v_lead - self.a_lead * self.dt) + cvx.sum_squares(self.j[t]) * 5 + \
-                   cvx.sum_squares(self.min_follow_distance - self.x[t + 1]) * 5 + cvx.sum_squares(self.a[t + 1])
+                   cvx.sum_squares(self.min_follow_distance - self.x[t + 1]) * 10 + cvx.sum_squares(self.a[t + 1]) * 100
             # if t > 0:
             #     cost += cvx.sum_squares(a[t] - a[t - 1]) * 10
 
@@ -78,7 +78,7 @@ class LongitudinalPlanner(Node):
 
             constr = [self.v[t + 1] == self.v[t] + self.a[t] * self.dt,
                       self.x[t + 1] == self.x[t] - self.v[t] * self.dt + self.v_lead * self.dt,
-                      self.x[t + 1] >= self.min_follow_distance - 3,
+                      self.x[t + 1] >= self.min_follow_distance - 5,
                       self.v[t + 1] <= self.cruising_speed + 1,
                       self.a[t + 1] <= self.max_acceleration,
                       self.a[t + 1] >= self.min_acceleration,

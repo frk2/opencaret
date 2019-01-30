@@ -2,13 +2,13 @@ import filterpy.kalman
 import filterpy.common
 import numpy as np
 
-STD_DEV_RADAR_LNG = 1.0
-STD_DEV_RADAR_VEL = 0.05
+STD_DEV_RADAR_LNG = 0.01
+STD_DEV_RADAR_VEL = 0.1
 PROCESS_STD_DEV = 0.1
 
 
 class RadarTrackUKF:
-    DT = 0.1
+    DT = 0.05
 
     def fx(self, x, dt):
         F = np.array([[1, dt],
@@ -34,7 +34,6 @@ class RadarTrackUKF:
         self.ukf.Q = filterpy.common.Q_discrete_white_noise(dim=2, dt=RadarTrackUKF.DT,
                                                             var=PROCESS_STD_DEV ** 2)
     def update(self, dist, vel, dt=None):
-        # print("dist: {}, vel: {}, dt: {}".format(dist,vel, dt))
         self.ukf.predict(dt=dt)
         self.ukf.update([dist, vel])
         return tuple(self.ukf.x)

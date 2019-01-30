@@ -9,7 +9,7 @@ import math
 from util import util
 import numpy as np
 
-PLAN_LOOKAHEAD_INDEX = 3
+PLAN_LOOKAHEAD_INDEX = 2
 TIME_STEP = 0.2
 MAX_THROTTLE = 0.4
 MAX_BRAKE = 0.5
@@ -23,9 +23,9 @@ class CONTROL_MODE:
 
 
 class LongitudinalController(Node):
-    kP = 0.1
+    kP = 0.12
     kI = 0.01
-    kF = 0.13
+    kF = (0.09, 0.15)
     DEADBAND_ACCEL = 0.05
     DEADBAND_BRAKE = -0.05
 
@@ -58,7 +58,7 @@ class LongitudinalController(Node):
         self.velocity_plan = None
         self.controls_enabled_sub = self.create_subscription(Bool, 'controls_enable', self.on_controls_enable)
 
-        self.pid_timer = self.create_timer(1.0 / 50.0, self.pid_spin)
+        self.rate = 1.0 / 50.0
 
     def set_target_throttle(self, target, force=False):
         self.target_throttle = target
@@ -72,6 +72,7 @@ class LongitudinalController(Node):
 
     def on_controls_enable(self, msg):
         self.controls_enabled = msg.data
+        self.pi.clear()
 
     def on_speed(self, msg):
         self.ego_velocity = msg.data
@@ -163,7 +164,9 @@ class LongitudinalController(Node):
 def main():
     rclpy.init()
     controls = LongitudinalController()
-    rclpy.spin(controls)
+    while rclpy.ok():
+        controls.pid_spin()
+        rclpy.spin_once(controls, timeout_sec=controls.rate / 10)
     controls.destroy_node()
     rclpy.shutdown()
 

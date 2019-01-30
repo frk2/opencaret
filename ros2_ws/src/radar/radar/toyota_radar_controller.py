@@ -56,7 +56,7 @@ class ToyotaRadarController(Node, can.Listener):
 
     def __init__(self, bus):
         super().__init__('radar')
-        self.tracks_pub = self.create_publisher(RadarTracks, 'radar_tracks')
+        # self.tracks_pub = self.create_publisher(RadarTracks, 'radar_tracks')
         #self.can_pub = self.create_publisher(CanMessage, 'can_send')
         self.adas_db = cantools.db.load_file(os.path.join(opendbc.DBC_PATH, 'toyota_prius_2017_adas.dbc'))
 

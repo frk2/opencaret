@@ -19,5 +19,9 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='tracker', node_executable='obstacle_tracker', output='screen'),
         launch_ros.actions.Node(
-            package='canoc', node_executable='transceiver', arguments=['can0'], output='screen')
+            package='canoc', node_executable='transceiver', arguments=['can0'], output='screen'),
+        # launch_ros.actions.Node(
+        #     package='controls', node_executable='razor_imu', arguments=['/dev/ttyACM0'], output='screen'),
+        # launch_ros.actions.Node(
+        #     package='planner', node_executable='fake_ego', output='screen')
     ])

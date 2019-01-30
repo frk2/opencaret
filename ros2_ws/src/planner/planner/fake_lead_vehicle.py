@@ -23,7 +23,7 @@ class FakeLeadVehicle(Node):
         self.velocity_sub = self.create_subscription(Float32, 'wheel_speed', self.on_wheel_speed)
         self.controls_enabled = self.create_subscription(Bool, 'controls_enable', self.on_controls_enable)
         self.tick_timer = self.create_timer(1. /10, self.tick)
-        self.controls_enabled = False
+        self.controls_enabled = True
 
     def on_controls_enable(self, msg):
         self.controls_enabled = msg.data
@@ -54,7 +54,7 @@ class FakeLeadVehicle(Node):
             self.accel = 0.0
 
         lead_obs_msg = Obstacle()
-        lead_obs_msg.point = Point(self.distance, 0)
+        lead_obs_msg.point = Point(x=self.distance, y=0.0)
         lead_obs_msg.relative_speed = self.velocity - self.current_ego_speed
         print(lead_obs_msg)
         self.lead_obs_pub.publish(lead_obs_msg)

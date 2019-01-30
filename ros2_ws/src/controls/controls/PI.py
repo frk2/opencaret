@@ -5,7 +5,7 @@ class PI:
     """PID Controller
     """
 
-    def __init__(self, P=0.2, I=0.0, F=0.0, minimum=-1.0, maximum=1.0):
+    def __init__(self, P=0.2, I=0.0, F=(0.0, 0.0), minimum=-1.0, maximum=1.0):
         self.Kp = P
         self.Ki = I
         self.Kf = F
@@ -15,14 +15,14 @@ class PI:
         self.min = minimum
         self.max = maximum
         self.sample_time = 0.00
-        self.current_time = time.time()
-        self.last_time = self.current_time
         self.clear()
 
     def clear(self):
         """Clears PID computations and coefficients"""
         self.i = 0.0
         self.last_error = 0.0
+        self.current_time = time.time()
+        self.last_time = self.current_time
 
         # Windup Guard
         self.int_error = 0.0
@@ -31,7 +31,12 @@ class PI:
 
     def update(self, target, feedback_value, feed_forward):
         error = target - feedback_value
-        ff = self.Kf * feed_forward
+        if feed_forward >= 0:
+            kff = self.Kf[0]
+        else:
+            kff = self.Kf[1]
+
+        ff = kff * feed_forward
 
         self.current_time = time.time()
         delta_time = self.current_time - self.last_time

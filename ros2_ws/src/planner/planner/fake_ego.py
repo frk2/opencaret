@@ -1,4 +1,4 @@
-from opencaret_msgs.msg import LeadVehicle, LongitudinalPlan
+from opencaret_msgs.msg import LongitudinalPlan
 from std_msgs.msg import Float32
 from rclpy.node import Node
 import sys

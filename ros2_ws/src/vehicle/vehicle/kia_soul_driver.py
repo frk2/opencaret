@@ -9,10 +9,10 @@ from std_msgs.msg import Float32, Bool
 from sensor_msgs.msg import JointState
 import time
 from util import util
-
+from statistics import mean
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
-ACC_FILTER_FACTOR = 0.95
+ACC_FILTER_FACTOR = 0.90
 
 class KiaSoulDriver(Node):
 
@@ -68,7 +68,11 @@ class KiaSoulDriver(Node):
                     self.steering_joint_states_pub.publish(joint_msg)
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
-                    speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
+                    speed = util.mph_to_ms(mean([float(kia_can_msg["SPEED_rear_left"]),
+                                                float(kia_can_msg["SPEED_rear_right"]),
+                                                float(kia_can_msg["SPEED_front_left"]),
+                                                float(kia_can_msg["SPEED_front_right"])
+                                                ]))
                     self.on_speed(speed, msg.can_timestamp)
             elif msg.id in self.oscc_db._frame_id_to_message:
                 # OSCC Message. Currently this only publishes 0 or 1 to indicate
