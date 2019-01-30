@@ -119,7 +119,7 @@ class LongitudinalPlanner():
             plan.velocity = np.array(self.v.value).reshape(-1).tolist()
             self.plan_pub.publish(plan)
         else:
-            rospy.logerror("No solution with v: {}, a: {}, x: {}".format(self.v_ego.value, self.a_ego.value, self.x_lead.value))
+            rospy.logerr("No solution with v: {}, a: {}, x: {}".format(self.v_ego.value, self.a_ego.value, self.x_lead.value))
 
 
 def main():

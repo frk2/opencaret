@@ -187,7 +187,7 @@ class ToyotaRadarController(can.Listener):
 def main():
     rospy.init_node('radar_controller', anonymous=False, log_level=rospy.DEBUG)
     # Get the parameters for the LLC node.
-    interface = rospy.get_param('interface')
+    interface = rospy.get_param('radar-interface')
     ToyotaRadarController(bus=interface)
 
 

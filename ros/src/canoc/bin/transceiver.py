@@ -112,7 +112,7 @@ class Transceiver(can.Listener):
 def main():
     rospy.init_node('transceiver', anonymous=False, log_level=rospy.DEBUG)
     # Get the parameters for the LLC node.
-    interface = rospy.get_param('interface')
+    interface = rospy.get_param('car-interface')
     Transceiver(can_interface=interface)
 
 if __name__ == '__main__':

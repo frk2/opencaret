@@ -11,6 +11,8 @@ import os
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
+STEER_ACC_FILTER_FACTOR = 0.90
+
 
 OSCC_DBC_PATH = os.path.join(oscc.__path__[1],"api","include","can_protocols")
 
@@ -21,27 +23,28 @@ class KiaSoulDriver():
         self.last_velocity = None
         self.last_velocity_ts = None
         self.filtered_accel = 0
-        self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
         self.can_pub = rospy.Publisher('/can_send', CanMessage, queue_size=1)
-
+        self.last_steering_angle = None
+        self.last_steering_angle_ts = None
+        self.steering_accel = 0.0
         self.speed_pub = rospy.Publisher('/wheel_speed', Float32, queue_size=1)
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
+        self.steer_accel_pub = rospy.Publisher('/steering_accel', Float32, queue_size=1)
         self.steering_wheel_angle_raw_pub = rospy.Publisher('/steering/wheel_angle/raw', Float32, queue_size=1)
         self.steering_angle_raw_pub = rospy.Publisher('/steering/yaw_angle/raw', Float32, queue_size=1)
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
         self.accel_pedal_pub = rospy.Publisher('/accel_pedal', Float32, queue_size=1)
         self.brake_pedal_pub = rospy.Publisher('/brake_pedal', Float32, queue_size=1)
         # self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
+        self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
+        self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
 
         self.throttle_cmd_sub = rospy.Subscriber('/throttle_command', Float32, self.on_throttle_cmd)
         self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
         self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
-
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
-
-        self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
-        self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
+        self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
 
 
     def on_can_message(self, msg):
@@ -57,7 +60,7 @@ class KiaSoulDriver():
                     self.steering_wheel_angle_raw_pub.publish(steering_wheel_angle_msg)
                     self.steering_angle_raw_pub.publish(yaw_angle_msg)
                     joint_msg = JointState()
-                    joint_msg.header.stamp = util.time_stamp(msg.can_timestamp)
+                    joint_msg.header.stamp = rospy.Time.from_seconds(msg.can_timestamp)
                     joint_msg.name=["steering_joint", "yaw", "front_left_steer_joint", "front_right_steer_joint"]
                     joint_msg.position = [
                         steering_wheel_angle,
@@ -66,6 +69,7 @@ class KiaSoulDriver():
                         steering_wheel_angle/KIA_SOUL_STEERING_RATIO
                     ]
                     self.steering_joint_states_pub.publish(joint_msg)
+                    self.calc_steering_accel(steering_wheel_angle, msg.can_timestamp)
                 elif msg_type.name == "SPEED":
                     # print(kia_can_msg)
                     speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
@@ -83,6 +87,18 @@ class KiaSoulDriver():
                     self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
                 elif oscc_can_msg.name == "THROTTLE_REPORT":
                     self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
+
+    def calc_steering_accel(self, steering, ts):
+        if self.last_steering_angle is None:
+            self.last_steering_angle = steering
+            self.last_steering_angle_ts = ts
+            return
+        if ts > self.last_steering_angle_ts:
+            steer_accel = (steering - self.last_steering_angle) / (ts - self.last_steering_angle_ts)
+            self.steering_accel = STEER_ACC_FILTER_FACTOR * self.steering_accel + (1 - STEER_ACC_FILTER_FACTOR) * steer_accel
+            self.steer_accel_pub.publish(Float32(data=self.steering_accel))
+        self.last_steering_angle_ts = ts
+        self.last_steering_angle = steering
 
     def on_speed(self, speed, ts):
         if self.last_velocity is None:

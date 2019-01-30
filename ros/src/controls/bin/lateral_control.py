@@ -11,8 +11,8 @@ import rospy
 
 
 
-MAX_STEERING = 0.3
-STEER_FILTER = 0.95
+MAX_STEERING = 0.35
+STEER_FILTER = 0.90
 RATE = 50.0
 
 class CONTROL_MODE:
@@ -21,8 +21,8 @@ class CONTROL_MODE:
 
 
 class LateralController():
-    kP = 0.1
-    kI = 0.01
+    kP = 0.30
+    kI = 0.0001
     kF = 0.05
     DEADBAND = 0.05
 
@@ -36,9 +36,11 @@ class LateralController():
         self.p_pub = rospy.Publisher('spid_p', Float32, queue_size=1)
         self.ff_pub = rospy.Publisher('spid_ff', Float32, queue_size=1)
         self.i_pub = rospy.Publisher('spid_i', Float32, queue_size=1)
+        self.target_accel = rospy.Publisher('spid_targaccel', Float32, queue_size=1)
         rospy.Subscriber("wheel_speed", Float32, self.on_speed)
         rospy.Subscriber("/steering/wheel_angle/raw", Float32, self.on_wheel_angle)
         rospy.Subscriber("/target_steering_angle", Float32, self.on_target_steering_angle)
+        rospy.Subscriber("/steering_accel", Float32, self.on_steer_accel)
         self.steering_pub = rospy.Publisher('/steering_command', Float32, queue_size=1)
         self.last_request_angle_time = None
         self.controls_enabled = False
@@ -55,6 +57,9 @@ class LateralController():
     def on_wheel_angle(self, angle):
         self.current_steering_angle = angle.data
 
+    def on_steer_accel(self, accel):
+        self.steering_accel = accel.data
+
     def on_controls_enable(self, msg):
         self.controls_enabled = msg.data
 
@@ -65,7 +70,19 @@ class LateralController():
         if not self.controls_enabled:
             return
         ff = 1.0 / (1. + self.ego_velocity)
-        output = self.pi.update(self.target_steering_angle, self.current_steering_angle, ff)
+        target_accel = 0
+        steering_diff_p = abs(self.current_steering_angle - self.target_steering_angle)
+        steering_diff_p = min(1.0, max(0.0, steering_diff_p))
+        if self.current_steering_angle < self.target_steering_angle - 0.2:
+            target_accel = steering_diff_p
+        elif self.current_steering_angle > self.target_steering_angle + 0.2:
+            target_accel = - steering_diff_p
+        else:
+            target_accel = 0.0
+
+        self.target_accel.publish(Float32(data=target_accel))
+
+        output = self.pi.update(target_accel, self.steering_accel, ff)
 
         #  PI debug
         self.p_pub.publish(Float32(data=self.pi.P))
@@ -73,7 +90,7 @@ class LateralController():
         self.i_pub.publish(Float32(data=self.pi.I))
 
         self.steering_output = STEER_FILTER * self.steering_output + (1.0 - STEER_FILTER) * output
-        self.steering_pub.publish(Float32(data=self.steering_output))
+        self.steering_pub.publish(Float32(data=-self.steering_output))
 
 
 def main():
