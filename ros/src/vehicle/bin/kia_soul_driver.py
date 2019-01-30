@@ -32,10 +32,12 @@ class KiaSoulDriver():
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
         self.accel_pedal_pub = rospy.Publisher('/accel_pedal', Float32, queue_size=1)
         self.brake_pedal_pub = rospy.Publisher('/brake_pedal', Float32, queue_size=1)
-        self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
+        # self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
 
         self.throttle_cmd_sub = rospy.Subscriber('/throttle_command', Float32, self.on_throttle_cmd)
         self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
+        self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
+
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
 
         self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
@@ -113,6 +115,19 @@ class KiaSoulDriver():
                                         interface=CanMessage.CANTYPE_CONTROL,
                                         data=encoded_msg))
 
+    def on_steering_cmd(self, msg):
+        if not self.enabled:
+            return
+
+        brake_oscc_msg = self.oscc_db.get_message_by_name("STEERING_COMMAND")
+        self.can_pub.publish(CanMessage(id=brake_oscc_msg.frame_id,
+                                        interface=CanMessage.CANTYPE_CONTROL,
+                                        data=brake_oscc_msg.encode({
+                                            'steering_command_magic': OSCC_MAGIC_NUMBER,
+                                            'steering_command_torque_request': msg.data,
+                                            'steering_command_reserved': 0
+                                        })))
+
     def on_brake_cmd(self, msg):
         if not self.enabled:
             return
@@ -142,10 +157,10 @@ class KiaSoulDriver():
                     'throttle_enable_magic': OSCC_MAGIC_NUMBER,
                     'throttle_enable_reserved': 0
                 }),
-                # ("STEERING_ENABLE", {
-                #     'steering_enable_magic': OSCC_MAGIC_NUMBER,
-                #     'steering_enable_reserved': 0
-                # }),
+                ("STEERING_ENABLE", {
+                    'steering_enable_magic': OSCC_MAGIC_NUMBER,
+                    'steering_enable_reserved': 0
+                }),
             ]
         else:
             msgs = [

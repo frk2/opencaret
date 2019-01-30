@@ -97,7 +97,7 @@ class LongitudinalController():
 
     def find_current_position_in_plan(self):
         dt = time.time() - self.last_plan_time
-        closest_plan_index = min(len(self.velocity_plan) - 1, math.floor(dt / TIME_STEP))
+        closest_plan_index = int(min(len(self.velocity_plan) - 1, math.floor(dt / TIME_STEP)))
         time_since_closest_plan_index = dt - closest_plan_index * TIME_STEP
         current_plan_deviation = self.velocity_plan[closest_plan_index].item() - self.ego_velocity
         return closest_plan_index,  time_since_closest_plan_index, current_plan_deviation

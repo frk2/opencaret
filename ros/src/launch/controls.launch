@@ -4,5 +4,7 @@
   <!-- node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/-->
   <node pkg="tracker" type="obstacle_tracker.py" name="tracker" output="screen"/>
   <node pkg="planner" type="longitudinal_planner.py" name="planner" output="screen"/>
-  <node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/>
+  <node pkg="controls" type="longitudinal_control.py" name="longcontrols" output="screen"/>
+  <node pkg="controls" type="lateral_control.py" name="latcontrols" output="screen"/>
+
 </launch>

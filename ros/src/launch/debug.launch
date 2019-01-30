@@ -2,7 +2,9 @@
      <include file="$(dirname)/interface.launch"/>
      <include file="$(dirname)/controls.launch"/>
      <include file="$(dirname)/rviz.launch"/>
-    <node type="rqt_plot" name="rqt_plot" pkg="rqt_plot" args="/computed_accel_filtered /pid_target_accel \
+    <node type="rqt_plot" name="rqt_plot_accel" pkg="rqt_plot" args="/computed_accel_filtered /pid_target_accel \
     /pid_target_speed /wheel_speed /lead_obstacle/point/x" />
+    <node type="rqt_plot" name="rqt_plot_steer" pkg="rqt_plot" args="/target_steering_angle /steering/wheel_angle/raw \
+    /spid_p /spid_i /spid_ff /steering_command" />
 
 </launch>
