@@ -8,7 +8,8 @@ import math
 from util import util
 import numpy as np
 import rospy
-
+import pickle
+from sklearn import svm
 
 
 MAX_STEERING = 0.35
@@ -26,11 +27,14 @@ class LateralController():
     kF = 0.05
     DEADBAND = 0.05
 
-    def __init__(self):
+    def __init__(self, model_file):
+        self.model = pickle.load(open(model_file, 'rb'))
         self.ego_velocity = 0
         self.steering_output = 0.0
         self.target_steering_angle = 0.0
         self.current_steering_angle = 0.0
+        self.steering_accel = 0
+        self.steering_accel_2 = 0
         self.mode = CONTROL_MODE.STRAIGHTENING
         self.pi = PI(self.kP, self.kI, self.kF, -MAX_STEERING, MAX_STEERING)
         self.p_pub = rospy.Publisher('spid_p', Float32, queue_size=1)
@@ -41,9 +45,12 @@ class LateralController():
         rospy.Subscriber("/steering/wheel_angle/raw", Float32, self.on_wheel_angle)
         rospy.Subscriber("/target_steering_angle", Float32, self.on_target_steering_angle)
         rospy.Subscriber("/steering_accel", Float32, self.on_steer_accel)
+        rospy.Subscriber("/steering_accel_2", Float32, self.on_steer_accel_2)
+
         self.steering_pub = rospy.Publisher('/steering_command', Float32, queue_size=1)
         self.last_request_angle_time = None
         self.controls_enabled = False
+
         self.controls_enabled_sub = rospy.Subscriber('controls_enable', Bool, self.on_controls_enable)
 
         rate = rospy.Rate(RATE)
@@ -59,6 +66,9 @@ class LateralController():
 
     def on_steer_accel(self, accel):
         self.steering_accel = accel.data
+
+    def on_steer_accel_2(self, accel):
+        self.steering_accel_2 = accel.data
 
     def on_controls_enable(self, msg):
         self.controls_enabled = msg.data
@@ -82,7 +92,8 @@ class LateralController():
 
         self.target_accel.publish(Float32(data=target_accel))
 
-        output = self.pi.update(target_accel, self.steering_accel, ff)
+        #output = self.pi.update(target_accel, self.steering_accel, ff)
+        output = self.model.predict([target_accel, self.current_steering_angle, self.steering_accel_2])
 
         #  PI debug
         self.p_pub.publish(Float32(data=self.pi.P))
@@ -90,12 +101,13 @@ class LateralController():
         self.i_pub.publish(Float32(data=self.pi.I))
 
         self.steering_output = STEER_FILTER * self.steering_output + (1.0 - STEER_FILTER) * output
-        self.steering_pub.publish(Float32(data=-self.steering_output))
+        self.steering_pub.publish(Float32(data=self.steering_output))
 
 
 def main():
     rospy.init_node('lateral_control', anonymous=False, log_level=rospy.DEBUG)
-    LateralController()
+    model = rospy.get_param('steering-model')
+    LateralController(model_file=model)
 
 
 if __name__ == '__main__':

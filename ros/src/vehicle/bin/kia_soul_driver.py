@@ -13,7 +13,7 @@ import struct
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
-STEER_ACC_FILTER_FACTOR = 0.90
+STEER_ACC_FILTER_FACTOR = 0.95
 
 
 OSCC_DBC_PATH = os.path.join(oscc.__path__[1],"api","include","can_protocols")
@@ -33,6 +33,8 @@ class KiaSoulDriver():
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
         self.steer_accel_pub = rospy.Publisher('/steering_accel', Float32, queue_size=1)
+        self.steer_accel2_pub = rospy.Publisher('/steering_accel_2', Float32, queue_size=1)
+
         self.steering_wheel_angle_raw_pub = rospy.Publisher('/steering/wheel_angle/raw', Float32, queue_size=1)
         self.steering_angle_raw_pub = rospy.Publisher('/steering/yaw_angle/raw', Float32, queue_size=1)
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
@@ -104,8 +106,11 @@ class KiaSoulDriver():
             return
         if ts > self.last_steering_angle_ts:
             steer_accel = (steering - self.last_steering_angle) / (ts - self.last_steering_angle_ts)
+            last_accel = self.steering_accel
             self.steering_accel = STEER_ACC_FILTER_FACTOR * self.steering_accel + (1 - STEER_ACC_FILTER_FACTOR) * steer_accel
+            accel_2 = (self.steering_accel - last_accel) / (ts - self.last_steering_angle_ts)
             self.steer_accel_pub.publish(Float32(data=self.steering_accel))
+            self.steer_accel2_pub.publish(Float32(data=accel_2))
         self.last_steering_angle_ts = ts
         self.last_steering_angle = steering
 
