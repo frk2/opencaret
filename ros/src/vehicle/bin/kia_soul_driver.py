@@ -96,10 +96,9 @@ class KiaSoulDriver():
                 if msg_type.name == "STEERING_REPORT":
                     _,_,_,torque = struct.unpack_from("hccf", msg.data)
                     self.steering_torque.publish(Float32(data=torque / 12.7))
-                    # if self.last_accel2 != 0.0:
-                    #     self.file.write("{},{},{},{}\n".format(torque / 12.7, self.steering_accel, self.last_steering_angle,
-                    #                                            self.last_accel2))
-                    #     self.file.flush()
+                    self.file.write("{},{},{},{}\n".format(torque / 12.7, self.steering_accel, self.last_steering_angle,
+                                                           self.last_accel2))
+                    self.file.flush()
                     # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
     def calc_steering_accel(self, steering, ts):
