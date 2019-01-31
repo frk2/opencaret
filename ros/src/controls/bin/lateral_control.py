@@ -81,8 +81,8 @@ class LateralController():
             return
         ff = 1.0 / (1. + self.ego_velocity)
         target_accel = 0
-        steering_diff_p = abs(self.current_steering_angle - self.target_steering_angle)
-        steering_diff_p = min(1.0, max(0.0, steering_diff_p))
+        steering_diff_p = abs(self.current_steering_angle - self.target_steering_angle) * 3
+        steering_diff_p = min(3.0, max(1.0, steering_diff_p))
         if self.current_steering_angle < self.target_steering_angle - 0.2:
             target_accel = steering_diff_p
         elif self.current_steering_angle > self.target_steering_angle + 0.2:
@@ -93,15 +93,22 @@ class LateralController():
         self.target_accel.publish(Float32(data=target_accel))
 
         #output = self.pi.update(target_accel, self.steering_accel, ff)
-        output = self.model.predict([target_accel, self.current_steering_angle, self.steering_accel_2])
+        output = self.model.predict([[target_accel, self.current_steering_angle, self.steering_accel_2]])
+        print("output: {}, inp: {}, targ: {}".format(output, [target_accel, self.current_steering_angle, self.steering_accel_2], self.target_steering_angle))
+        NUDGE = 0.06
+        if output > 0:
+            output += NUDGE
+        else:
+            output -= NUDGE
+        output = min(MAX_STEERING, max(-MAX_STEERING, output))
 
         #  PI debug
-        self.p_pub.publish(Float32(data=self.pi.P))
-        self.ff_pub.publish(Float32(data=self.pi.FF))
-        self.i_pub.publish(Float32(data=self.pi.I))
+        # self.p_pub.publish(Float32(data=self.pi.P))
+        # self.ff_pub.publish(Float32(data=self.pi.FF))
+        # self.i_pub.publish(Float32(data=self.pi.I))
 
         self.steering_output = STEER_FILTER * self.steering_output + (1.0 - STEER_FILTER) * output
-        self.steering_pub.publish(Float32(data=self.steering_output))
+        self.steering_pub.publish(Float32(data=-self.steering_output))
 
 
 def main():

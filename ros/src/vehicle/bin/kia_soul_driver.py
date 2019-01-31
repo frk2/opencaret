@@ -29,6 +29,7 @@ class KiaSoulDriver():
         self.last_steering_angle = None
         self.last_steering_angle_ts = None
         self.steering_accel = 0.0
+        self.last_accel2 =  0.0
         self.speed_pub = rospy.Publisher('/wheel_speed', Float32, queue_size=1)
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
@@ -49,7 +50,7 @@ class KiaSoulDriver():
         self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
         self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
-        # self.file = open('/tmp/steering-data.csv', 'w')
+        self.file = open('/tmp/steering-data.csv', 'w')
 
 
     def on_can_message(self, msg):
@@ -95,8 +96,10 @@ class KiaSoulDriver():
                 if msg_type.name == "STEERING_REPORT":
                     _,_,_,torque = struct.unpack_from("hccf", msg.data)
                     self.steering_torque.publish(Float32(data=torque / 12.7))
-                    # self.file.write("{},{},{},{}\n".format(msg.can_timestamp, torque / 12.7, self.steering_accel, self.last_steering_angle))
-                    # self.file.flush()
+                    # if self.last_accel2 != 0.0:
+                    #     self.file.write("{},{},{},{}\n".format(torque / 12.7, self.steering_accel, self.last_steering_angle,
+                    #                                            self.last_accel2))
+                    #     self.file.flush()
                     # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
     def calc_steering_accel(self, steering, ts):
@@ -111,6 +114,7 @@ class KiaSoulDriver():
             accel_2 = (self.steering_accel - last_accel) / (ts - self.last_steering_angle_ts)
             self.steer_accel_pub.publish(Float32(data=self.steering_accel))
             self.steer_accel2_pub.publish(Float32(data=accel_2))
+            self.last_accel2 = accel_2
         self.last_steering_angle_ts = ts
         self.last_steering_angle = steering
 
