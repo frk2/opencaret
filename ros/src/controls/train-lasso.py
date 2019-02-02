@@ -11,19 +11,19 @@ import numpy as np
 # Finally, import function to make a machine learning pipeline
 from sklearn.pipeline import make_pipeline
 # Alpha (regularization strength) of LASSO regression
-lasso_eps = 0.001
-lasso_nalpha=100
+lasso_eps = 0.00001
+lasso_nalpha=20
 lasso_iter=1000000
 import sys
 # Min and max degree of polynomials features to consider
-degree_min = 4
-degree_max = 15
+degree_min = 2
+degree_max = 5
 
 test_set_fraction=0.1
 # Test/train split
 read = np.genfromtxt(sys.argv[1], delimiter=',')
-read = read[2:,:]
-X_train, X_test, y_train, y_test = train_test_split(read[:,1:], read[:,0],test_size=test_set_fraction)
+read = read[2:,1:]
+X_train, X_test, y_train, y_test = train_test_split(read[:,[1,3]], read[:,0],test_size=test_set_fraction)
 
 # Make a pipeline model with polynomial transformation and LASSO regression with cross-validation, run it for increasing degree of polynomial (complexity of the model)
 best_score = 0
@@ -41,4 +41,4 @@ normalize=True,cv=5))
       print("Writing model")
       pickle.dump(model, open('best_model','wb'), protocol=2)
       best_score = test_score
-    print(model.predict([[0, 8,-5], [1,8, 0], [0,0, -5], [0,0,5]]))
+    print(model.predict([[0,-5], [1, 0], [0, -5], [0,5]]))

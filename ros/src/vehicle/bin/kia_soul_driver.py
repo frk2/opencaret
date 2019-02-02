@@ -9,11 +9,11 @@ from util import util
 import rospy
 import os
 import struct
-
+from util.util import SimpleTimedDiff
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
-STEER_ACC_FILTER_FACTOR = 0.95
+STEER_ACC_FILTER_FACTOR = 0
 
 
 OSCC_DBC_PATH = os.path.join(oscc.__path__[1],"api","include","can_protocols")
@@ -31,6 +31,8 @@ class KiaSoulDriver():
         self.steering_accel = 0.0
         self.last_accel2 =  0.0
         self.last_torque = 0.0
+        self.accel_average = SimpleTimedDiff(0.1)
+        self.accel2_average = SimpleTimedDiff(0.25)
         self.speed_pub = rospy.Publisher('/wheel_speed', Float32, queue_size=1)
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
@@ -102,19 +104,24 @@ class KiaSoulDriver():
                     # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
     def calc_steering_accel(self, steering, ts):
+        self.accel_average.append(steering, ts)
+
         if self.last_steering_angle is None:
             self.last_steering_angle = steering
             self.last_steering_angle_ts = ts
             return
         if ts > self.last_steering_angle_ts:
-            steer_accel = (steering - self.last_steering_angle)  / (ts - self.last_steering_angle_ts)
+            # steer_accel = (steering - self.last_steering_angle)  / (ts - self.last_steering_angle_ts)
+            steer_accel = self.accel_average.get_diff()
+            self.accel2_average.append(steer_accel, ts)
             last_accel = self.steering_accel
             self.steering_accel = STEER_ACC_FILTER_FACTOR * self.steering_accel + (1 - STEER_ACC_FILTER_FACTOR) * steer_accel
             accel_2 = (self.steering_accel - last_accel)  / (ts - self.last_steering_angle_ts)
+            accel_2 = self.accel2_average.get_diff()
             self.steer_accel_pub.publish(Float32(data=self.steering_accel))
             self.steer_accel2_pub.publish(Float32(data=accel_2))
             self.last_accel2 = accel_2
-            self.file.write("{}, {},{},{},{}\n".format(ts, self.last_torque / 12.7, self.steering_accel, self.last_steering_angle,
+            self.file.write("{:.10f}, {},{},{},{}\n".format(ts, self.last_torque / 12.7, self.steering_accel, self.last_steering_angle,
                                                    self.last_accel2))
             self.file.flush()
         self.last_steering_angle_ts = ts
