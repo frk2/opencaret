@@ -14,14 +14,14 @@ from sklearn.pipeline import make_pipeline
 lasso_eps = 0.001
 lasso_nalpha=100
 lasso_iter=1000000
-
+import sys
 # Min and max degree of polynomials features to consider
-degree_min = 10
-degree_max = 24
+degree_min = 4
+degree_max = 15
 
 test_set_fraction=0.1
 # Test/train split
-read = np.genfromtxt('steering-data2filtered.csv', delimiter=',')
+read = np.genfromtxt(sys.argv[1], delimiter=',')
 read = read[2:,:]
 X_train, X_test, y_train, y_test = train_test_split(read[:,1:], read[:,0],test_size=test_set_fraction)
 
@@ -39,6 +39,6 @@ normalize=True,cv=5))
     print(test_score)
     if test_score > best_score:
       print("Writing model")
-      pickle.dump(model, open('best_model','wb'))
+      pickle.dump(model, open('best_model','wb'), protocol=2)
       best_score = test_score
-    print(model.predict([[-3/50, 8,0], [3/50, 8,0], [-3/50, -8,0], [3/50, -8,0], [-3/50, 0, 1.5/50], [-3/50, 0, -0.5/50], [-3/50, 0, -1.5/50], [-3/50, 0, -2.5/50], [-3/50, 0, -3.5/50], [-3/50, 0, -5.5/50]]))
+    print(model.predict([[0, 8,-5], [1,8, 0], [0,0, -5], [0,0,5]]))

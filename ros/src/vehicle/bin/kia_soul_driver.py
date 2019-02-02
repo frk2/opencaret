@@ -13,7 +13,7 @@ import struct
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
-STEER_ACC_FILTER_FACTOR = 0
+STEER_ACC_FILTER_FACTOR = 0.95
 
 
 OSCC_DBC_PATH = os.path.join(oscc.__path__[1],"api","include","can_protocols")
@@ -114,7 +114,7 @@ class KiaSoulDriver():
             self.steer_accel_pub.publish(Float32(data=self.steering_accel))
             self.steer_accel2_pub.publish(Float32(data=accel_2))
             self.last_accel2 = accel_2
-            self.file.write("{},{},{},{}\n".format(self.last_torque / 12.7, self.steering_accel, self.last_steering_angle,
+            self.file.write("{}, {},{},{},{}\n".format(ts, self.last_torque / 12.7, self.steering_accel, self.last_steering_angle,
                                                    self.last_accel2))
             self.file.flush()
         self.last_steering_angle_ts = ts
