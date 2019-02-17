@@ -163,7 +163,7 @@ class KiaSoulDriver():
             return
 
         brake_oscc_msg = self.oscc_db.get_message_by_name("STEERING_COMMAND")
-        self.can_pub.publish(CanMessage(id=brake_oscc_msg.frame_id,
+        self.can_pub.publish(CanMessage(id=0x84,
                                         interface=CanMessage.CANTYPE_CONTROL,
                                         data=brake_oscc_msg.encode({
                                             'steering_command_magic': OSCC_MAGIC_NUMBER,
