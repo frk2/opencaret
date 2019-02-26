@@ -9,10 +9,11 @@ from util import util
 import numpy as np
 import rospy
 import pickle
+from controls.train_torch import Reader
 from sklearn import svm
+import torch
 
-
-MAX_STEERING = 0.35
+MAX_STEERING = 0.30
 STEER_FILTER = 0.90
 RATE = 50.0
 
@@ -35,6 +36,10 @@ class LateralController():
         self.current_steering_angle = 0.0
         self.steering_accel = 0
         self.steering_accel_2 = 0
+
+        self.net = torch.load('../../../data/out-model').eval()
+        self.reader = Reader()
+
         self.mode = CONTROL_MODE.STRAIGHTENING
         self.pi = PI(self.kP, self.kI, self.kF, -MAX_STEERING, MAX_STEERING)
         self.p_pub = rospy.Publisher('spid_p', Float32, queue_size=1)
@@ -49,7 +54,7 @@ class LateralController():
 
         self.steering_pub = rospy.Publisher('/steering_command', Float32, queue_size=1)
         self.last_request_angle_time = None
-        self.controls_enabled = False
+        self.controls_enabled = True
 
         self.controls_enabled_sub = rospy.Subscriber('controls_enable', Bool, self.on_controls_enable)
 
@@ -92,12 +97,13 @@ class LateralController():
 
         self.target_accel.publish(Float32(data=target_accel))
 
+        target_accel_2 = target_accel - self.steering_accel
         #output = self.pi.update(target_accel, self.steering_accel, ff)
-        output = self.model.predict([[target_accel /5.0, self.current_steering_angle, self.steering_accel_2 / 5.0]])
-        print("output: {}, inp: {}, targ: {}, curr accel: {}".format(output, [target_accel /5.0,
-                                                                              self.current_steering_angle,
-                                                                              self.steering_accel_2/5.0], self.target_steering_angle,
-                                                                     self.steering_accel))
+
+        X = [self.steering_accel , self.current_steering_angle, target_accel_2]
+        Y = self.net(torch.Tensor([self.reader.transformX(X)]))
+        output = self.reader.transformY(Y)
+        print("output: {}, inp: {}, targ: {}, curr accel: {}".format(output, X, self.target_steering_angle))
         NUDGE = 0.01
         if output > 0:
             output += NUDGE
