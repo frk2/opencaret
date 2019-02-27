@@ -15,6 +15,7 @@ KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
 STEER_ACC_FILTER_FACTOR = 0
 
+print(oscc.__path__)
 
 OSCC_DBC_PATH = os.path.join(oscc.__path__[1],"api","include","can_protocols")
 
@@ -55,9 +56,11 @@ class KiaSoulDriver():
         self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
         self.file = open('/tmp/steering-data.csv', 'w')
 
+        self.CANTYPE_CONTROL = rospy.get_param('car-interface')
+
 
     def on_can_message(self, msg):
-        if msg.interface == CanMessage.CANTYPE_CONTROL:
+        if msg.interface == self.CANTYPE_CONTROL:            
             if msg.id in self.kia_db._frame_id_to_message:
                 # Kia CAN messageSTEERING_ANGLE_angle
                 kia_can_msg = self.kia_db.decode_message(msg.id, bytearray(msg.data))
