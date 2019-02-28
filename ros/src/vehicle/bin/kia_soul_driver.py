@@ -12,6 +12,7 @@ import struct
 from canoc.can_transceiver import CanTransceiver
 from util.util import SimpleTimedDiff
 OSCC_MAGIC_NUMBER = 0xcc05
+OSCC_STEERING_PID_COMMAND_MODE = 2
 KIA_SOUL_STEERING_RATIO = 15.7
 ACC_FILTER_FACTOR = 0.95
 STEER_ACC_FILTER_FACTOR = 0
@@ -27,7 +28,9 @@ class KiaSoulDriver():
         self.last_velocity = None
         self.last_velocity_ts = None
         self.filtered_accel = 0
-        self.can_pub = rospy.Publisher('/can_send', CanMessage, queue_size=1)
+        self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
+        self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
+        self.can_bus = CanTransceiver(CanTransceiver.CONTROL_INTERFACE_PARAM, delegate=self)
         self.last_steering_angle = None
         self.last_steering_angle_ts = None
         self.steering_accel = 0.0
@@ -38,24 +41,23 @@ class KiaSoulDriver():
         self.speed_pub = rospy.Publisher('/wheel_speed', Float32, queue_size=1)
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
-        self.steer_accel_pub = rospy.Publisher('/steering_accel', Float32, queue_size=1)
-        self.steer_accel2_pub = rospy.Publisher('/steering_accel_2', Float32, queue_size=1)
 
         self.steering_wheel_angle_raw_pub = rospy.Publisher('/steering/wheel_angle/raw', Float32, queue_size=1)
         self.steering_angle_raw_pub = rospy.Publisher('/steering/yaw_angle/raw', Float32, queue_size=1)
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
         self.accel_pedal_pub = rospy.Publisher('/accel_pedal', Float32, queue_size=1)
         self.brake_pedal_pub = rospy.Publisher('/brake_pedal', Float32, queue_size=1)
-        self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
-        self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
-        self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
 
         self.throttle_cmd_sub = rospy.Subscriber('/throttle_command', Float32, self.on_throttle_cmd)
         self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
         self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
-        self.can_bus = CanTransceiver(CanTransceiver.CONTROL_INTERFACE_PARAM, delegate=self)
-        self.file = open('/tmp/steering-data.csv', 'w')
+
+        rospy.on_shutdown(self.on_shutdown)
+
+    def on_shutdown(self):
+        # disable controls
+        self.oscc_enabled(False)
 
     def on_can_message(self, msg, can_timestamp):
         if msg.arbitration_id in self.kia_db._frame_id_to_message:
@@ -78,7 +80,7 @@ class KiaSoulDriver():
                     steering_wheel_angle/KIA_SOUL_STEERING_RATIO
                 ]
                 self.steering_joint_states_pub.publish(joint_msg)
-                self.calc_steering_accel(steering_wheel_angle, can_timestamp)
+
             elif msg_type.name == "SPEED":
                 # print(kia_can_msg)
                 speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
@@ -91,41 +93,6 @@ class KiaSoulDriver():
             oscc_can_msg = self.oscc_db.decode_message(msg.arbitration_id, bytearray(msg.data))
             msg_type = self.oscc_db.get_message_by_frame_id(msg.arbitration_id)
 
-            # if oscc_can_msg.name == "BRAKE_REPORT":
-            #     # self.brake_pedal_pub.publish(oscc_can_msg.brake_report_enabled)
-            # elif oscc_can_msg.name == "STEERING_REPORT":
-            #     self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
-            # el
-            if msg_type.name == "STEERING_REPORT":
-                _,_,_,torque = struct.unpack_from("hccf", msg.data)
-                self.steering_torque.publish(Float32(data=torque / 12.7))
-                self.last_torque = torque
-
-                # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
-
-    def calc_steering_accel(self, steering, ts):
-        self.accel_average.append(steering, ts)
-
-        if self.last_steering_angle is None:
-            self.last_steering_angle = steering
-            self.last_steering_angle_ts = ts
-            return
-        if ts > self.last_steering_angle_ts:
-            # steer_accel = (steering - self.last_steering_angle)  / (ts - self.last_steering_angle_ts)
-            steer_accel = self.accel_average.get_diff()
-            self.accel2_average.append(steer_accel, ts)
-            last_accel = self.steering_accel
-            self.steering_accel = STEER_ACC_FILTER_FACTOR * self.steering_accel + (1 - STEER_ACC_FILTER_FACTOR) * steer_accel
-            accel_2 = (self.steering_accel - last_accel)  / (ts - self.last_steering_angle_ts)
-            accel_2 = self.accel2_average.get_diff()
-            self.steer_accel_pub.publish(Float32(data=self.steering_accel))
-            self.steer_accel2_pub.publish(Float32(data=accel_2))
-            self.last_accel2 = accel_2
-            self.file.write("{:.10f}, {},{},{},{}\n".format(ts, self.last_torque / 12.7, self.steering_accel, self.last_steering_angle,
-                                                   self.last_accel2))
-            self.file.flush()
-        self.last_steering_angle_ts = ts
-        self.last_steering_angle = steering
 
     def on_speed(self, speed, ts):
         if self.last_velocity is None:
@@ -154,37 +121,36 @@ class KiaSoulDriver():
             'throttle_command_pedal_request': msg.data,
             'throttle_command_reserved' : 0
         })
-        self.can_pub.publish(CanMessage(id=throttle_oscc_msg.frame_id,
-                                        interface=CanMessage.CANTYPE_CONTROL,
-                                        data=encoded_msg))
+        self.can_bus.send_message(id=throttle_oscc_msg.frame_id,
+                                data=encoded_msg)
 
     def on_steering_cmd(self, msg):
         if not self.enabled:
             return
 
-        brake_oscc_msg = self.oscc_db.get_message_by_name("STEERING_COMMAND")
-        self.can_pub.publish(CanMessage(id=0x84,
-                                        interface=CanMessage.CANTYPE_CONTROL,
-                                        data=brake_oscc_msg.encode({
-                                            'steering_command_magic': OSCC_MAGIC_NUMBER,
-                                            'steering_command_torque_request': msg.data,
-                                            'steering_command_reserved': 0
-                                        })))
+        steering_oscc_msg = self.oscc_db.get_message_by_name("STEERING_COMMAND")
+        self.can_bus.send_message(id=0x84,
+                                data=steering_oscc_msg.encode({
+                                    'steering_command_magic': OSCC_MAGIC_NUMBER,
+                                    'steering_command_torque_request': msg.data,
+                                    'steering_command_reserved': 0
+                                }))
 
     def on_brake_cmd(self, msg):
         if not self.enabled:
             return
 
         brake_oscc_msg = self.oscc_db.get_message_by_name("BRAKE_COMMAND")
-        self.can_pub.publish(CanMessage(id=brake_oscc_msg.frame_id,
-                                        interface=CanMessage.CANTYPE_CONTROL,
-                                        data=brake_oscc_msg.encode({
-                                            'brake_command_magic': OSCC_MAGIC_NUMBER,
-                                            'brake_command_pedal_request': msg.data,
-                                            'brake_command_reserved': 0
-                                        })))
+        self.can_bus.send_message(id=brake_oscc_msg.frame_id,
+                                    interface=CanMessage.CANTYPE_CONTROL,
+                                    data=brake_oscc_msg.encode({
+                                        'brake_command_magic': OSCC_MAGIC_NUMBER,
+                                        'brake_command_pedal_request': msg.data,
+                                        'brake_command_reserved': 0
+                                    }))
 
     def on_controls_enable(self, msg):
+        print('on_controls_enable')
         self.oscc_enabled(msg.data)
         self.enabled = msg.data
 
@@ -223,9 +189,8 @@ class KiaSoulDriver():
 
         for name, data in msgs:
             msg = self.oscc_db.get_message_by_name(name)
-            self.can_pub.publish(CanMessage(id=msg.frame_id,
-                                        interface=CanMessage.CANTYPE_CONTROL,
-                                        data=msg.encode(data)))
+            self.can_bus.send_message(id=msg.frame_id,
+                                    data=msg.encode(data))
 
 
 def main():

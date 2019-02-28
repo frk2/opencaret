@@ -35,8 +35,7 @@ class CanTransceiver(can.Listener):
     def __init__(self, param_name, can_interfaces=None, delegate=None):
         self.can_bus = None
         self.notifier = None
-        self.can_type = None
-        self.param_name = param_name        
+        self.param_name = param_name
         self.can_interfaces = can_interfaces
         self.found = False
         self.delegate = delegate
@@ -54,8 +53,8 @@ class CanTransceiver(can.Listener):
             rate.sleep()
         if interface and not self.can_interfaces:
             rospy.loginfo("Listening on interfaces: {}".format(interface))
-            can_bus = can.interface.Bus(bustype='socketcan', channel=interface, extended=False)
-            self.notifiers.append(can.Notifier(can_bus, [self], timeout=0.1))
+            self.can_bus = can.interface.Bus(bustype='socketcan', channel=interface, extended=False)
+            self.notifiers.append(can.Notifier(self.can_bus, [self], timeout=0.1))
 
     def can_loop(self):
         rate = rospy.Rate(RATE)
@@ -66,8 +65,8 @@ class CanTransceiver(can.Listener):
                 msg = self.can_bus.recv(0.0)
             rate.sleep()
 
-    def on_send_message(self, msg):
-        message = can.Message(arbitration_id=msg.id, data=bytearray(msg.data), extended_id=msg.is_extended)
+    def send_message(self, id, data, is_extended=False):
+        message = can.Message(arbitration_id=id, data=bytearray(data), extended_id=is_extended)
         self.can_bus.send(message)
 
     def on_message_received(self, msg):
