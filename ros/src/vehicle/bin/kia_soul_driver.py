@@ -9,6 +9,7 @@ from util import util
 import rospy
 import os
 import struct
+from canoc.can_transceiver import CanTransceiver
 from util.util import SimpleTimedDiff
 OSCC_MAGIC_NUMBER = 0xcc05
 KIA_SOUL_STEERING_RATIO = 15.7
@@ -53,58 +54,54 @@ class KiaSoulDriver():
         self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
         self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
-        self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
+        self.can_bus = CanTransceiver(CanTransceiver.CONTROL_INTERFACE_PARAM, delegate=self)
         self.file = open('/tmp/steering-data.csv', 'w')
 
-        self.CANTYPE_CONTROL = rospy.get_param('car-interface')
+    def on_can_message(self, msg, can_timestamp):
+        if msg.arbitration_id in self.kia_db._frame_id_to_message:
+            # Kia CAN messageSTEERING_ANGLE_angle
+            kia_can_msg = self.kia_db.decode_message(msg.arbitration_id, bytearray(msg.data))
+            msg_type = self.kia_db.get_message_by_frame_id(msg.arbitration_id)
+            if msg_type.name == "STEERING_ANGLE":
+                steering_wheel_angle = float(kia_can_msg["STEERING_ANGLE_angle"]) * math.pi / 180.0
+                steering_wheel_angle_msg = Float32(data=steering_wheel_angle)
+                yaw_angle_msg = Float32(data=steering_wheel_angle/KIA_SOUL_STEERING_RATIO)
+                self.steering_wheel_angle_raw_pub.publish(steering_wheel_angle_msg)
+                self.steering_angle_raw_pub.publish(yaw_angle_msg)
+                joint_msg = JointState()
+                joint_msg.header.stamp = rospy.Time.from_seconds(can_timestamp)
+                joint_msg.name=["steering_joint", "yaw", "front_left_steer_joint", "front_right_steer_joint"]
+                joint_msg.position = [
+                    steering_wheel_angle,
+                    steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
+                    steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
+                    steering_wheel_angle/KIA_SOUL_STEERING_RATIO
+                ]
+                self.steering_joint_states_pub.publish(joint_msg)
+                self.calc_steering_accel(steering_wheel_angle, can_timestamp)
+            elif msg_type.name == "SPEED":
+                # print(kia_can_msg)
+                speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
+                self.on_speed(speed, can_timestamp)
+        elif msg.arbitration_id in self.oscc_db._frame_id_to_message:
+            # OSCC Message. Currently this only publishes 0 or 1 to indicate
+            # enabled or not. In the future this should be changed to
+            # throttle/brake/steering values but that requires a firmware change
+            # to the OSCC
+            oscc_can_msg = self.oscc_db.decode_message(msg.arbitration_id, bytearray(msg.data))
+            msg_type = self.oscc_db.get_message_by_frame_id(msg.arbitration_id)
 
+            # if oscc_can_msg.name == "BRAKE_REPORT":
+            #     # self.brake_pedal_pub.publish(oscc_can_msg.brake_report_enabled)
+            # elif oscc_can_msg.name == "STEERING_REPORT":
+            #     self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
+            # el
+            if msg_type.name == "STEERING_REPORT":
+                _,_,_,torque = struct.unpack_from("hccf", msg.data)
+                self.steering_torque.publish(Float32(data=torque / 12.7))
+                self.last_torque = torque
 
-    def on_can_message(self, msg):
-        if msg.interface == self.CANTYPE_CONTROL:            
-            if msg.id in self.kia_db._frame_id_to_message:
-                # Kia CAN messageSTEERING_ANGLE_angle
-                kia_can_msg = self.kia_db.decode_message(msg.id, bytearray(msg.data))
-                msg_type = self.kia_db.get_message_by_frame_id(msg.id)
-                if msg_type.name == "STEERING_ANGLE":
-                    steering_wheel_angle = float(kia_can_msg["STEERING_ANGLE_angle"]) * math.pi / 180.0
-                    steering_wheel_angle_msg = Float32(data=steering_wheel_angle)
-                    yaw_angle_msg = Float32(data=steering_wheel_angle/KIA_SOUL_STEERING_RATIO)
-                    self.steering_wheel_angle_raw_pub.publish(steering_wheel_angle_msg)
-                    self.steering_angle_raw_pub.publish(yaw_angle_msg)
-                    joint_msg = JointState()
-                    joint_msg.header.stamp = rospy.Time.from_seconds(msg.can_timestamp)
-                    joint_msg.name=["steering_joint", "yaw", "front_left_steer_joint", "front_right_steer_joint"]
-                    joint_msg.position = [
-                        steering_wheel_angle,
-                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
-                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO,
-                        steering_wheel_angle/KIA_SOUL_STEERING_RATIO
-                    ]
-                    self.steering_joint_states_pub.publish(joint_msg)
-                    self.calc_steering_accel(steering_wheel_angle, msg.can_timestamp)
-                elif msg_type.name == "SPEED":
-                    # print(kia_can_msg)
-                    speed = util.mph_to_ms(float(kia_can_msg["SPEED_rear_left"]))
-                    self.on_speed(speed, msg.can_timestamp)
-            elif msg.id in self.oscc_db._frame_id_to_message:
-                # OSCC Message. Currently this only publishes 0 or 1 to indicate
-                # enabled or not. In the future this should be changed to
-                # throttle/brake/steering values but that requires a firmware change
-                # to the OSCC
-                oscc_can_msg = self.oscc_db.decode_message(msg.id, bytearray(msg.data))
-                msg_type = self.oscc_db.get_message_by_frame_id(msg.id)
-
-                # if oscc_can_msg.name == "BRAKE_REPORT":
-                #     # self.brake_pedal_pub.publish(oscc_can_msg.brake_report_enabled)
-                # elif oscc_can_msg.name == "STEERING_REPORT":
-                #     self.steering_torque.publish(oscc_can_msg.steering_report_enabled)
-                # el
-                if msg_type.name == "STEERING_REPORT":
-                    _,_,_,torque = struct.unpack_from("hccf", msg.data)
-                    self.steering_torque.publish(Float32(data=torque / 12.7))
-                    self.last_torque = torque
-
-                    # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
+                # self.accel_pedal_pub.publish(oscc_can_msg.throttle_report_enabled)
 
     def calc_steering_accel(self, steering, ts):
         self.accel_average.append(steering, ts)
