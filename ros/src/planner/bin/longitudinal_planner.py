@@ -8,7 +8,7 @@ import time
 import math
 import numpy as np
 import rospy
-INITIAL_CRUISING_SPEED = 10.0
+INITIAL_CRUISING_SPEED = 5.0
 INITIAL_DISTANCE_TO_LEAD_CAR = 100.0
 
 RATE = 4.0
