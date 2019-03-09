@@ -16,3 +16,6 @@
 [submodule "ros/src/oscc/src/oscc"]
 	path = ros/src/oscc/src/oscc
 	url = git@github.com:frk2/oscc.git
+[submodule "ros/src/ros-bridge"]
+	path = ros/src/ros-bridge
+	url = git@github.com:frk2/ros-bridge.git
