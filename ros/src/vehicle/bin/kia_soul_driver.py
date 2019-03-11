@@ -50,7 +50,7 @@ class KiaSoulDriver():
 
         self.throttle_cmd_sub = rospy.Subscriber('/throttle_command', Float32, self.on_throttle_cmd)
         self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
-        self.steering_sub = rospy.Subscriber('/steering_command', Float32, self.on_steering_cmd)
+        self.steering_sub = rospy.Subscriber('/steering_angle_target', Float32, self.on_steering_angle_target)
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
         self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
         self.file = open('/tmp/steering-data.csv', 'w')
@@ -158,16 +158,16 @@ class KiaSoulDriver():
                                         interface=CanMessage.CANTYPE_CONTROL,
                                         data=encoded_msg))
 
-    def on_steering_cmd(self, msg):
+    def on_steering_angle_target(self, msg):
         if not self.enabled:
             return
-
+        steering_wheel_angle = KIA_SOUL_STEERING_RATIO * msg.data
         brake_oscc_msg = self.oscc_db.get_message_by_name("STEERING_COMMAND")
         self.can_pub.publish(CanMessage(id=0x84,
                                         interface=CanMessage.CANTYPE_CONTROL,
                                         data=brake_oscc_msg.encode({
                                             'steering_command_magic': OSCC_MAGIC_NUMBER,
-                                            'steering_command_torque_request': msg.data,
+                                            'steering_command_torque_request': steering_wheel_angle,
                                             'steering_command_reserved': 0
                                         })))
 
