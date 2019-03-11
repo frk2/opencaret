@@ -1,0 +1,8 @@
+<launch>
+     <include file="$(dirname)/controls.launch"/>
+     <rosparam file="$(find carla_ros_bridge)/config/settings.yaml" command="load" />
+     <node pkg="carla_ros_bridge" name="carla_ros_bridge" type="client.py" output="screen"/>
+     <node pkg="vehicle" name="vehicle" type="carla_driver.py" output="screen"/>
+     <include file="$(dirname)/rviz.launch"/>
+
+</launch>

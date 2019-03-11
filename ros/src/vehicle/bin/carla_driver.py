@@ -11,7 +11,7 @@ from carla_ros_bridge.parent import Parent
 from carla_ros_bridge.msg import EgoVehicleControlInfo
 from ackermann_msgs.msg import AckermannDrive
 from std_msgs.msg import Float32
-from opencaret_msgs.msg import LongitudinalTarget
+from opencaret_msgs.msg import LongitudinalTarget, RadarTrack, RadarTracks, RadarTrackAccel
 from sensor_msgs.msg import JointState
 
 import time
@@ -29,6 +29,7 @@ class CarlaWorld:
         self.map = self.world.get_map()
         self.player = None
         self.camera = None
+        self.distance_sensor = None
         self.ego_vehicle = None
         self.steering = 0.0
         self.seg = None
@@ -43,6 +44,7 @@ class CarlaWorld:
         self.steering_wheel_angle_raw_pub = rospy.Publisher('/steering/wheel_angle/raw', Float32, queue_size=1)
         self.steering_angle_raw_pub = rospy.Publisher('/steering/yaw_angle/raw', Float32, queue_size=1)
         self.steering_joint_states_pub = rospy.Publisher('/steering/joint_states', JointState, queue_size=1)
+        self.radar_pub = rospy.Publisher('/radar_tracks', RadarTracks, queue_size=1)
 
         self.steering_sub = rospy.Subscriber('/steering_angle_target', Float32, self.on_steering_cmd)
         self.last_plan_time = None
@@ -100,13 +102,49 @@ class CarlaWorld:
             camera_sensor_bp,
             carla.Transform(carla.Location(x=0.0, z=1.7)),
             attach_to=self.player)
-        weak_self = weakref.ref(self)
         self.seg.listen(
             lambda image: self.parse_seg(image))
+
+        distance_sensor_bp = self.world.get_blueprint_library().find('sensor.other.obstacle')
+        # distance_sensor_bp.set_attribute('distance','50.0')
+        # distance_sensor_bp.set_attribute('hit_radius','1.0')
+        distance_sensor_bp.set_attribute('sensor_tick','0.5')
+        # distance_sensor_bp.set_attribute('debug_linetrace','true')
+
+
+        # Distance sensor is currently broken!
+        
+        # if self.distance_sensor is not None:
+        #     self.distance_sensor.destroy()
+        # self.distance_sensor = self.world.spawn_actor(
+        #     distance_sensor_bp,
+        #     carla.Transform(carla.Location(x=1.6, z=1.7), carla.Rotation(yaw=0)),
+        #     attach_to=self.player)
+        # self.distance_sensor.listen(
+        #     lambda obstacle: self.parse_obstacle(obstacle))
+
+    def parse_obstacle(self, msg):
+        distance = msg.distance
+        print(distance)
+        radar_tracks_msg = RadarTracks()
+        track = RadarTrack()
+        track.counter = 1
+        track.lat_dist = 0
+        track.lng_dist = distance
+        track.rel_speed = 0
+        track.new_track = True
+        track.valid_count = 10
+        track.valid = True
+        radar_tracks = [track]
+        radar_tracks_msg.radar_tracks = radar_tracks
+        self.radar_pub.publish(radar_tracks_msg)
 
     def stop(self):
         self.camera.destroy()
         self.player.destroy()
+        self.seg.destroy()
+        self.distance_sensor.destroy()
+
 
     def parse_seg(self, seg):
         # seg.convert(cc.CityScapesPalette)
@@ -145,11 +183,9 @@ class CarlaWorld:
         msg.acceleration = self.long_target.accel
         msg.speed = self.long_target.speed
         msg.steering_angle = self.steering
-        print(msg)
         self.ego_cmd.publish(msg)
 
     def on_long_target(self, msg):
-        print(msg)
         self.long_target = msg
         self.send_msg()
 

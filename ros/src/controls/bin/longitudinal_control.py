@@ -20,7 +20,7 @@ class LongitudinalController():
 
         rospy.Subscriber('longitudinal_plan', LongitudinalPlan, self.on_plan)
         self.plan_deviation_pub = rospy.Publisher('/plan_deviation', Float32, queue_size=1)
-        self.long_target_pub = rospy.Publisher('/long_target', LongitudinalTarget, queue_size=1)
+        self.long_target_pub = rospy.Publisher('/longitudinal_target', LongitudinalTarget, queue_size=1)
         rospy.Subscriber("wheel_speed", Float32, self.on_speed)
         self.last_plan_time = None
         self.controls_enabled = False
