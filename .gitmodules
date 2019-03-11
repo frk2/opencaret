@@ -19,3 +19,6 @@
 [submodule "ros/src/ros-bridge"]
 	path = ros/src/ros-bridge
 	url = git@github.com:frk2/ros-bridge.git
+[submodule "ros/src/robot_localization"]
+	path = ros/src/robot_localization
+	url = git@github.com:ranakhalil/robot_localization.git
