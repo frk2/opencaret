@@ -1,12 +1,13 @@
 <launch>
      <include file="$(dirname)/interface.launch"/>
      <include file="$(dirname)/controls.launch"/>
-     <param name="sim-mode" value="True"/>
+     <param name="sim-mode" value="False"/>
      <node pkg="perception" type="road_detector.py" name="road_detector" output="screen"/>
      <include file="$(dirname)/rviz.launch"/>
+    <!--
     <node type="rqt_plot" name="rqt_plot_accel" pkg="rqt_plot" args="/computed_accel_filtered /pid_target_accel \
     /pid_target_speed /wheel_speed /lead_obstacle/point/x" />
     <node type="rqt_plot" name="rqt_plot_steer" pkg="rqt_plot" args="/target_steering_angle /steering/wheel_angle/raw \
     /steering_command /spid_targaccel /steering_accel" />
-
+    -->
 </launch>

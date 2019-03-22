@@ -19,10 +19,12 @@ data_location = file_location + '/../data/'
 DEBUG_MODE = False
 YM_PER_PIX = 0.01
 
+ROAD_LOOKAHEAD = 50
+
 class RoadDetector:
     def __init__(self, sim_mode=False):
 
-        self.camera = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(1)
         # self.camera = cv2.VideoCapture("/home/faraz/data/2019-03-20-192432.webm")
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 576)
@@ -75,6 +77,9 @@ class RoadDetector:
         if new_centroids is not None:
             self.last_centroids = new_centroids
 
+        if self.last_centroids is None:
+            rospy.logerr("Can't find one speck of road (literally)")
+            return
         # Fit poly to different axis as its more stable, then flip axes
 
         current_fit = np.poly1d(np.polyfit(self.last_centroids[:, 0],
@@ -95,17 +100,17 @@ class RoadDetector:
         y = self.last_fit(x)
 
         # x is y, y is x
-        ym = np.flip(x * YM_PER_PIX)
+        ym = np.flip(x * YM_PER_PIX, 0)
         self.last_ctes = perspective.shape[1] / 2.0 - y
         road_message = RoadSurface()
         road_message.distance = ym
         road_message.ctes = self.last_ctes
         road_message.curvatures = self.last_curvatures
-        road_message.cte = self.last_ctes[-50]
-        road_message.curvature = self.last_curvatures[-50]
+        road_message.cte = self.last_ctes[-ROAD_LOOKAHEAD]
+        road_message.curvature = self.last_curvatures[-ROAD_LOOKAHEAD]
         self.road_surface_pub.publish(road_message)
-        self.cte_pub.publish(Float32(data=self.last_ctes[-50]))
-        self.curvature_pub.publish(Float32(data=self.last_curvatures[-50]))
+        self.cte_pub.publish(Float32(data=self.last_ctes[-ROAD_LOOKAHEAD]))
+        self.curvature_pub.publish(Float32(data=self.last_curvatures[-ROAD_LOOKAHEAD]))
 
         linefit_warp = np.zeros((x.shape[0], 2))
         linefit_warp[:, 1] = x
@@ -126,7 +131,7 @@ class RoadDetector:
             point_list_centroids.append((centwarp[i][0], centwarp[i][1]))
         for i in range(linefit_warp.shape[0]):
             point_list_linefit.append((linefit_warp[i][0], linefit_warp[i][1]))
-        # draw.line(point_list_centroids, fill='blue', width=5)
+        draw.line(point_list_centroids, fill='blue', width=5)
         draw.line(point_list_linefit, fill='green', width=5)
         # overlay.show()
         img_to_publish = Image()
