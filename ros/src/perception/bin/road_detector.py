@@ -22,18 +22,17 @@ YM_PER_PIX = 0.01
 class RoadDetector:
     def __init__(self, sim_mode=False):
 
-        # self.camera = cv2.VideoCapture(0)
-        self.camera = cv2.VideoCapture("/home/faraz/data/2019-03-20-192432.webm")
+        self.camera = cv2.VideoCapture(0)
+        # self.camera = cv2.VideoCapture("/home/faraz/data/2019-03-20-192432.webm")
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 576)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(20)
         self.transform = pickle.load(open(data_location + 'road_transform_1536.p', 'rb'))
         (self.mtx, self.dist) = pickle.load(open(data_location + 'cam_calib.p', 'rb'))
         self.predictor = predict.Prediction()
         self.road_surface_pub = rospy.Publisher('/road_surface', RoadSurface, queue_size=1)
         self.cte_pub = rospy.Publisher('/cte', Float32, queue_size=1)
         self.curvature_pub = rospy.Publisher('/curvature', Float32, queue_size=1)
-
         self.seg_pub = rospy.Publisher('/front_camera_seg', Image, queue_size=1)
 
         self.last_centroids = None

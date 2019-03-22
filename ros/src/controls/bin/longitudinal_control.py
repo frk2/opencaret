@@ -11,7 +11,7 @@ PLAN_LOOKAHEAD_INDEX = 3
 TIME_STEP = 0.2
 MAX_PLANNER_DELAY = 1.0  # after 1.0s of no plan, consider the planner dead.
 
-RATE = 50.0
+RATE = 20.0
 
 class LongitudinalController():
     def __init__(self):
