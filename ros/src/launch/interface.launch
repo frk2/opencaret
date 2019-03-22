@@ -2,11 +2,15 @@
 <launch>
   <!-- Launch ROS Package Template Node -->
   <!-- node pkg="controls" type="longitudinal_control.py" name="controls" output="screen"/-->
-  <param name="car-interface" value="can0" />
-  <param name="radar-interface" value="can1" />
+  <arg name="use-radar" value="false" />
+  <param name="can-control-interface" value="vcan0" />
 
-  <node pkg="canoc" type="transceiver.py" name="transceiver" output="screen"/>
-  <node pkg="radar" type="toyota_radar_controller.py" name="radar" output="screen"/>
+  <node pkg="canoc" type="transceiver.py" name="transceiver" output="screen">
+    <param name="can-interfaces" value="can0,can1" if="$(arg use-radar)" />
+    <param name="can-interfaces" value="vcan0" unless="$(arg use-radar)" />
+  </node>
+
+  <node pkg="radar" type="toyota_radar_controller.py" name="radar" output="screen" if="$(arg use-radar)"/>
   <node pkg="vehicle" type="kia_soul_driver.py" name="vehicle" output="screen"/>
 
 </launch>

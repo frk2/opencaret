@@ -15,7 +15,7 @@ class CBR(nn.Module):
         :param kSize: kernel size
         :param stride: stride rate for down-sampling. Default is 1
         '''
-        super().__init__()
+        super(CBR, self).__init__()
         padding = int((kSize - 1)/2)
         #self.conv = nn.Conv2d(nIn, nOut, kSize, stride=stride, padding=padding, bias=False)
         self.conv = nn.Conv2d(nIn, nOut, (kSize, kSize), stride=stride, padding=(padding, padding), bias=False)
@@ -43,7 +43,7 @@ class BR(nn.Module):
         '''
         :param nOut: output feature maps
         '''
-        super().__init__()
+        super(BR, self).__init__()
         self.bn = nn.BatchNorm2d(nOut, eps=1e-03)
         self.act = nn.PReLU(nOut)
 
@@ -67,7 +67,7 @@ class CB(nn.Module):
         :param kSize: kernel size
         :param stride: optinal stide for down-sampling
         '''
-        super().__init__()
+        super(CB, self).__init__()
         padding = int((kSize - 1)/2)
         self.conv = nn.Conv2d(nIn, nOut, (kSize, kSize), stride=stride, padding=(padding, padding), bias=False)
         self.bn = nn.BatchNorm2d(nOut, eps=1e-03)
@@ -94,7 +94,7 @@ class C(nn.Module):
         :param kSize: kernel size
         :param stride: optional stride rate for down-sampling
         '''
-        super().__init__()
+        super(C, self).__init__()
         padding = int((kSize - 1)/2)
         self.conv = nn.Conv2d(nIn, nOut, (kSize, kSize), stride=stride, padding=(padding, padding), bias=False)
 
@@ -118,7 +118,7 @@ class CDilated(nn.Module):
         :param stride: optional stride rate for down-sampling
         :param d: optional dilation rate
         '''
-        super().__init__()
+        super(CDilated, self).__init__()
         padding = int((kSize - 1)/2) * d
         self.conv = nn.Conv2d(nIn, nOut, (kSize, kSize), stride=stride, padding=(padding, padding), bias=False, dilation=d)
 
@@ -132,7 +132,7 @@ class CDilated(nn.Module):
 
 class DownSamplerB(nn.Module):
     def __init__(self, nIn, nOut):
-        super().__init__()
+        super(DownSamplerB, self).__init__()
         n = int(nOut/5)
         n1 = nOut - 4*n
         self.c1 = C(nIn, n, 3, 2)
@@ -176,7 +176,7 @@ class DilatedParllelResidualBlockB(nn.Module):
                 in ResNet paper, but we avoid to use it if the dimensions are not the same because we do not want to
                 increase the module complexity
         '''
-        super().__init__()
+        super(DilatedParllelResidualBlockB, self).__init__()
         n = int(nOut/5)
         n1 = nOut - 4*n
         self.c1 = C(nIn, n, 1, 1)
@@ -227,7 +227,7 @@ class InputProjectionA(nn.Module):
         '''
         :param samplingTimes: The rate at which you want to down-sample the image
         '''
-        super().__init__()
+        super(InputProjectionA, self).__init__()
         self.pool = nn.ModuleList()
         for i in range(0, samplingTimes):
             #pyramid-based approach for down-sampling
@@ -253,7 +253,7 @@ class ESPNet_Encoder(nn.Module):
         :param p: depth multiplier
         :param q: depth multiplier
         '''
-        super().__init__()
+        super(ESPNet_Encoder, self).__init__()
         self.level1 = CBR(3, 16, 3, 2)
         self.sample1 = InputProjectionA(1)
         self.sample2 = InputProjectionA(2)
@@ -320,7 +320,7 @@ class ESPNet(nn.Module):
         :param encoderFile: pretrained encoder weights. Recall that we first trained the ESPNet-C and then attached the
                             RUM-based light weight decoder. See paper for more details.
         '''
-        super().__init__()
+        super(ESPNet, self).__init__()
         self.encoder = ESPNet_Encoder(classes, p, q)
         if encoderFile != None:
             self.encoder.load_state_dict(torch.load(encoderFile))

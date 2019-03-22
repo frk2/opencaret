@@ -21,6 +21,7 @@ class LongitudinalController():
         rospy.Subscriber('longitudinal_plan', LongitudinalPlan, self.on_plan)
         self.plan_deviation_pub = rospy.Publisher('/plan_deviation', Float32, queue_size=1)
         self.long_target_pub = rospy.Publisher('/longitudinal_target', LongitudinalTarget, queue_size=1)
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=1)
         rospy.Subscriber("wheel_speed", Float32, self.on_speed)
         self.last_plan_time = None
         self.controls_enabled = False
@@ -85,6 +86,7 @@ class LongitudinalController():
         control_msg.speed = velocity
         control_msg.accel = acceleration
         self.long_target_pub.publish(control_msg)
+        self.target_speed_pub.publish(Float32(data=velocity))
 
 def main():
     rospy.init_node('longitudinal_control', anonymous=False, log_level=rospy.DEBUG)

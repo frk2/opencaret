@@ -22,7 +22,6 @@ PLAN_LOOKAHEAD_INDEX = 3
 TIME_STEP = 0.2
 ACC_RATE_FILTER = 0.9
 
-
 class CarlaWorld:
     def __init__(self, world):
         self.world = world
@@ -35,10 +34,9 @@ class CarlaWorld:
         self.seg = None
 
         self.camera_publisher = rospy.Publisher('/front_camera', Image, queue_size=1)
-        self.seg_pub = rospy.Publisher('/front_camera_seg', Image, queue_size=1)
 
-        self.ego_cmd = rospy.Publisher('/carla/ego_vehicle/ackermann_cmd', AckermannDrive, queue_size=1)
-        self.speed_pub = rospy.Publisher('/wheel_speed', Float32, queue_size=1)
+        self.ego_cmd = rospy.Publisher('/carla/ego_vehicle/ackermann_cmd', AckermannDrive)
+        self.speed_pub = rospy.Publisher('/wheel_speed', Float32)
         self.accel_filtered_pub = rospy.Publisher('computed_accel_filtered', Float32, queue_size=1)
         self.accel_raw_pub = rospy.Publisher('computed_accel_raw', Float32, queue_size=1)
         self.steering_wheel_angle_raw_pub = rospy.Publisher('/steering/wheel_angle/raw', Float32, queue_size=1)
@@ -79,8 +77,9 @@ class CarlaWorld:
         # Set up the sensors.
 
         camera_sensor_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
-        camera_sensor_bp.set_attribute('image_size_x', str(1280))
-        camera_sensor_bp.set_attribute('image_size_y', str(720))
+        camera_sensor_bp.set_attribute('image_size_x', str(1024))
+        camera_sensor_bp.set_attribute('image_size_y', str(576))
+        camera_sensor_bp.set_attribute('sensor_tick', '0.2')
 
         if self.camera is not None:
             self.camera.destroy()
@@ -92,18 +91,18 @@ class CarlaWorld:
         self.camera.listen(
             lambda image: CarlaWorld.parse_image(weak_self, image))
 
-        camera_sensor_bp = self.world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
-        camera_sensor_bp.set_attribute('image_size_x', str(1280))
-        camera_sensor_bp.set_attribute('image_size_y', str(720))
-
-        if self.seg is not None:
-            self.seg.destroy()
-        self.seg = self.world.spawn_actor(
-            camera_sensor_bp,
-            carla.Transform(carla.Location(x=0.0, z=1.7)),
-            attach_to=self.player)
-        self.seg.listen(
-            lambda image: self.parse_seg(image))
+        # camera_sensor_bp = self.world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
+        # camera_sensor_bp.set_attribute('image_size_x', str(1280))
+        # camera_sensor_bp.set_attribute('image_size_y', str(720))
+        #
+        # if self.seg is not None:
+        #     self.seg.destroy()
+        # self.seg = self.world.spawn_actor(
+        #     camera_sensor_bp,
+        #     carla.Transform(carla.Location(x=0.0, z=1.7)),
+        #     attach_to=self.player)
+        # self.seg.listen(
+        #     lambda image: self.parse_seg(image))
 
         distance_sensor_bp = self.world.get_blueprint_library().find('sensor.other.obstacle')
         # distance_sensor_bp.set_attribute('distance','50.0')
@@ -142,8 +141,8 @@ class CarlaWorld:
     def stop(self):
         self.camera.destroy()
         self.player.destroy()
-        self.seg.destroy()
-        self.distance_sensor.destroy()
+        # self.seg.destroy()
+        # self.distance_sensor.destroy()
 
 
     def parse_seg(self, seg):
