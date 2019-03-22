@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="perception" type="road_detector.py" name="road_detector" output="screen"/>
+  <include file="$(dirname)/rviz.launch"/>
+
+</launch>

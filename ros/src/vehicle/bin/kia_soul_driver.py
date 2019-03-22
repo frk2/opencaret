@@ -47,10 +47,9 @@ class KiaSoulDriver():
         self.steering_torque = rospy.Publisher('/steering_torque', Float32, queue_size=1)
         self.kia_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'kia_soul_ev.dbc'))
         self.oscc_db = cantools.db.load_file(os.path.join(OSCC_DBC_PATH, 'oscc.dbc'))
-
-        self.throttle_cmd_sub = rospy.Subscriber('/throttle_command', Float32, self.on_throttle_cmd)
-        self.brake_cmd_sub = rospy.Subscriber('/brake_command', Float32, self.on_brake_cmd)
         self.steering_sub = rospy.Subscriber('/steering_angle_target', Float32, self.on_steering_angle_target)
+        rospy.Subscriber('longitudinal_target', LongitudinalTarget, self.on_long_target)
+
         self.controls_enable = rospy.Subscriber('/controls_enable', Bool, self.on_controls_enable)
         self.can_sub = rospy.Subscriber('/can_recv', CanMessage, self.on_can_message)
         self.file = open('/tmp/steering-data.csv', 'w')
@@ -229,7 +228,7 @@ class KiaSoulDriver():
 
 
 def main():
-    rospy.init_node('kia_sour_driver', anonymous=False, log_level=rospy.DEBUG)
+    rospy.init_node('kia_soul_driver', anonymous=False, log_level=rospy.DEBUG)
     # Get the parameters for the LLC node.
     KiaSoulDriver()
     rospy.spin()

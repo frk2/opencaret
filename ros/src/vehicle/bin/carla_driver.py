@@ -113,7 +113,7 @@ class CarlaWorld:
 
 
         # Distance sensor is currently broken!
-        
+
         # if self.distance_sensor is not None:
         #     self.distance_sensor.destroy()
         # self.distance_sensor = self.world.spawn_actor(

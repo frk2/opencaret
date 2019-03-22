@@ -3,9 +3,6 @@ import cv2
 import pickle
 
 __author__ = "Sachin Mehta"
-__license__ = "GPL"
-__version__ = "1.0.1"
-__maintainer__ = "Sachin Mehta"
 
 class LoadData:
     '''
@@ -58,14 +55,17 @@ class LoadData:
                 # we expect the text file to contain the data in following format
                 # <RGB Image>, <Label Image>
                 line_arr = line.split(',')
-                img_file = line_arr[0].strip()
+                img_file =  line_arr[0].strip()
                 label_file = line_arr[1].strip()
                 label_img = cv2.imread(label_file, 0)
+                label_img[label_img==255] = 19
                 unique_values = np.unique(label_img)
                 max_val = max(unique_values)
                 min_val = min(unique_values)
+
                 max_val_al = max(max_val, max_val_al)
                 min_val_al = min(min_val, min_val_al)
+                print(f"label :{label_file}, max: {max_val}")
 
                 if trainStg == True:
                     hist = np.histogram(label_img, self.classes)
@@ -89,7 +89,7 @@ class LoadData:
                 if max_val > (self.classes - 1) or min_val < 0:
                     print('Labels can take value between 0 and number of classes.')
                     print('Some problem with labels. Please check.')
-                    print('Label Image ID: ' + label_file + ' max_val: ' + str(max_val) + ' min_val: '+str(min_val))
+                    print('Label Image ID: ' + label_file)
                 no_files += 1
 
         if trainStg == True:

@@ -74,7 +74,7 @@ def evaluateModel(args, model, up, image_list):
             img[:, :, j] /= std[j]
 
         # resize the image to 1024x512x3
-        # img = cv2.resize(img, (1024, 512))
+        img = cv2.resize(img, (1024, 512))
         orig_image = None
         if args.overlay:
             orig_image = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)

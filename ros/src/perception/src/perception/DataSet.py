@@ -3,9 +3,6 @@ import cv2
 import torch.utils.data
 
 __author__ = "Sachin Mehta"
-__license__ = "GPL"
-__version__ = "1.0.1"
-__maintainer__ = "Sachin Mehta"
 
 
 class MyDataset(torch.utils.data.Dataset):
@@ -35,6 +32,8 @@ class MyDataset(torch.utils.data.Dataset):
         label_name = self.labelList[idx]
         image = cv2.imread(image_name)
         label = cv2.imread(label_name, 0)
+        label[label==255] = 19
+
         if self.transform:
             [image, label] = self.transform(image, label)
         return (image, label)
